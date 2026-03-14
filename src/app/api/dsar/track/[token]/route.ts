@@ -27,6 +27,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ tok
       updatedAt: data.updated_at,
       completedAt: data.completed_at ?? null,
       daysRemaining: getDaysRemaining(data.deadline),
+      emailVerified: data.email_verified ?? false,
+      phoneVerified: data.phone_verified ?? false,
+      userPhone: data.user_phone ?? null,
     });
   } catch (err) {
     console.error("Track DSAR error:", err);

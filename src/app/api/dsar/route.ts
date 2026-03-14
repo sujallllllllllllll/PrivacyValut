@@ -19,6 +19,8 @@ export async function POST(req: NextRequest) {
 
     const { userName, userEmail, userPhone, requestType, requestDetails } = body.data;
     const supabase = await createClient();
+    const emailToken = crypto.randomUUID();
+    const emailTokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
     const { data, error } = await supabase
       .from("dsar_requests")
@@ -28,12 +30,21 @@ export async function POST(req: NextRequest) {
         user_phone: userPhone ?? null,
         request_type: requestType,
         request_details: requestDetails ?? null,
-        status: "submitted",
+        email_token: emailToken,
+        email_token_expires_at: emailTokenExpiresAt,
+        status: "pending",
       })
       .select("id, token, deadline")
       .single();
 
     if (error) throw error;
+
+    // Simulate sending an email in development
+    console.log("----------------------------------------");
+    console.log(`[SIMULATED EMAIL TO ${userEmail}]`);
+    console.log(`Verify your request by clicking this link:`);
+    console.log(`http://localhost:3000/verify-email?token=${emailToken}`);
+    console.log("----------------------------------------");
 
     return NextResponse.json({ token: data.token, id: data.id, deadline: data.deadline }, { status: 201 });
   } catch (err) {

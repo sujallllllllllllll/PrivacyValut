@@ -9,6 +9,7 @@ type DsarStatus = {
   token: string; requestType: string; status: string; userName: string;
   createdAt: string; deadline: string | null; updatedAt: string;
   completedAt: string | null; daysRemaining: number | null;
+  emailVerified: boolean; phoneVerified: boolean; userPhone: string | null;
 };
 
 export default function TrackPage() {
@@ -38,8 +39,6 @@ export default function TrackPage() {
   useEffect(() => {
     if (!activeToken) return;
     fetchRequest(activeToken);
-    const interval = setInterval(() => fetchRequest(activeToken), 5000);
-    return () => clearInterval(interval);
   }, [activeToken, fetchRequest]);
 
   function handleSearch(e: React.FormEvent) {
@@ -74,11 +73,23 @@ export default function TrackPage() {
                   <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-1">Token</p>
                   <h2 className="text-2xl font-mono font-bold">{request.token}</h2>
                 </div>
-                <div className="flex flex-col items-start md:items-end">
-                  <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-2">Current Status</p>
+                <div className="flex flex-col items-start md:items-end gap-2">
+                  <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-1">Current Status</p>
                   <span className={`px-4 py-1.5 rounded-full text-sm font-semibold border ${getStatusTheme(request.status)}`}>
                     {formatStatus(request.status)}
                   </span>
+                  {request.status === "pending" && (
+                    <p className="text-xs text-amber-600 font-medium">
+                      {!request.emailVerified
+                        ? "⏳ Awaiting your email verification"
+                        : request.userPhone && !request.phoneVerified
+                        ? "⏳ Awaiting your phone verification"
+                        : "⏳ Awaiting submission"}
+                    </p>
+                  )}
+                  {request.status === "submitted" && (
+                    <p className="text-xs text-blue-600 font-medium">✓ Verified — Awaiting admin review</p>
+                  )}
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-8 gap-x-4 pt-8 border-t border-border">
@@ -106,9 +117,28 @@ export default function TrackPage() {
                   </div>
                 )}
               </div>
-            </CardContent>
+
+              {/* Pending action banners */}
+              {request.status === "pending" && !request.emailVerified && (
+                <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-sm">
+                  <p className="text-sm font-semibold text-amber-800 mb-1">⏳ Action Required — Verify Your Email</p>
+                  <p className="text-sm text-amber-700">Check your inbox and click the verification link we sent. Your request will not be reviewed until email is verified.</p>
+                </div>
+              )}
+              {request.status === "pending" && request.emailVerified && request.userPhone && !request.phoneVerified && (
+                <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-sm">
+                  <p className="text-sm font-semibold text-amber-800 mb-1">⏳ Action Required — Verify Your Phone</p>
+                  <p className="text-sm text-amber-700">Your email is verified but phone verification is still pending. Go back to the submission form to complete it.</p>
+                </div>
+              )}
+              {request.status === "submitted" && (
+                <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-sm">
+                  <p className="text-sm font-semibold text-blue-800 mb-1">✓ Identity Verified — Pending Admin Review</p>
+                  <p className="text-sm text-blue-700">Your identity has been verified. Our team will review your request and update the status shortly.</p>
+                </div>
+              )}            </CardContent>
           </Card>
-          <p className="text-center text-xs text-muted-foreground mt-4">Status refreshes automatically.</p>
+
         </div>
       )}
     </div>
