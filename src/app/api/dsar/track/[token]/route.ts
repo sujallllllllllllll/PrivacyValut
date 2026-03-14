@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
 import { getDaysRemaining } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
   try {
     const { token } = await params;
@@ -27,6 +29,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ tok
       updatedAt: data.updated_at,
       completedAt: data.completed_at ?? null,
       daysRemaining: getDaysRemaining(data.deadline),
+      emailVerified: data.email_verified ?? false,
+      phoneVerified: data.phone_verified ?? false,
+      userPhone: data.user_phone ?? null,
     });
   } catch (err) {
     console.error("Track DSAR error:", err);

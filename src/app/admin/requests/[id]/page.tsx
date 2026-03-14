@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { formatStatus, getStatusTheme, getDaysRemainingTheme, formatDateTime, getDaysRemaining } from "@/lib/utils";
 import { StatusUpdater } from "./status-updater";
 import { AiSummary } from "./ai-summary";
+import { ProcessorPropagation } from "./processor-propagation";
 
 export const dynamic = "force-dynamic";
 
@@ -23,23 +24,36 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center gap-4 mb-8">
-        <Link href="/admin" className="text-muted-foreground hover:text-primary transition-colors text-sm font-medium">
-          &larr; Back to Dashboard
+        <Link href="/admin" className="text-muted-foreground hover:text-primary transition-colors text-sm font-semibold flex items-center gap-2 hover:gap-3 transition-all">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to Dashboard
         </Link>
       </div>
 
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 pb-6 border-b border-border">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 pb-6 border-b-2 border-border">
         <div>
-          <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-3xl font-mono font-bold">{req.token}</h1>
-            <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${getStatusTheme(req.status)}`}>
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+              </svg>
+            </div>
+            <h1 className="text-4xl font-mono font-bold">{req.token}</h1>
+            <span className={`px-3 py-1.5 rounded-full text-xs font-bold border-2 shadow-sm ${getStatusTheme(req.status)}`}>
               {formatStatus(req.status)}
             </span>
             {isUrgent && (
-              <span className="px-2.5 py-1 rounded-full text-xs font-bold border border-red-200 bg-red-100 text-red-800">URGENT</span>
+              <span className="px-3 py-1.5 rounded-full text-xs font-bold border-2 border-red-300 bg-gradient-to-r from-red-100 to-red-200 text-red-900 shadow-sm animate-pulse">⚠ URGENT</span>
             )}
           </div>
-          <p className="text-muted-foreground">Requested by {req.user_name} ({req.user_email})</p>
+          <p className="text-muted-foreground flex items-center gap-2 text-base">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            Requested by <span className="font-semibold text-foreground">{req.user_name}</span> ({req.user_email})
+          </p>
         </div>
         <StatusUpdater id={id} currentStatus={req.status} />
       </div>
@@ -77,6 +91,15 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
             </CardHeader>
             <AiSummary requestId={id} />
           </Card>
+
+          {(req.request_type === "access" || req.request_type === "erasure" || req.request_type === "modify") && (
+            <ProcessorPropagation
+              requestId={id}
+              requestType={req.request_type}
+              userEmail={req.user_email}
+              userName={req.user_name}
+            />
+          )}
         </div>
 
         <div className="space-y-6">

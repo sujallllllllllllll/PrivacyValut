@@ -4,11 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/form";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatStatus, getStatusTheme, getDaysRemainingTheme, formatDate, formatDateTime } from "@/lib/utils";
+import { DsarResults } from "./dsar-results";
 
 type DsarStatus = {
   token: string; requestType: string; status: string; userName: string;
   createdAt: string; deadline: string | null; updatedAt: string;
   completedAt: string | null; daysRemaining: number | null;
+  emailVerified: boolean; phoneVerified: boolean; userPhone: string | null;
 };
 
 export default function TrackPage() {
@@ -38,8 +40,6 @@ export default function TrackPage() {
   useEffect(() => {
     if (!activeToken) return;
     fetchRequest(activeToken);
-    const interval = setInterval(() => fetchRequest(activeToken), 5000);
-    return () => clearInterval(interval);
   }, [activeToken, fetchRequest]);
 
   function handleSearch(e: React.FormEvent) {
@@ -66,49 +66,153 @@ export default function TrackPage() {
       )}
 
       {request && (
-        <div className="mt-12">
+        <div className="mt-12 space-y-6">
           <Card>
             <CardContent className="p-8">
-              <div className="flex flex-col md:flex-row justify-between md:items-start gap-6 mb-8">
+
+              {/* Header row */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-1">Token</p>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-1">Tracking Token</p>
                   <h2 className="text-2xl font-mono font-bold">{request.token}</h2>
                 </div>
-                <div className="flex flex-col items-start md:items-end">
-                  <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-2">Current Status</p>
-                  <span className={`px-4 py-1.5 rounded-full text-sm font-semibold border ${getStatusTheme(request.status)}`}>
-                    {formatStatus(request.status)}
-                  </span>
-                </div>
+                <span className={`self-start sm:self-auto px-4 py-1.5 rounded-full text-sm font-semibold border ${
+                  ["under_review", "processing"].includes(request.status) ? "status-pulse " : ""
+                }${getStatusTheme(request.status)}`}>
+                  {formatStatus(request.status)}
+                </span>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-8 gap-x-4 pt-8 border-t border-border">
-                <div><p className="text-sm text-muted-foreground mb-1">Request Type</p><p className="font-medium capitalize">{request.requestType}</p></div>
-                <div><p className="text-sm text-muted-foreground mb-1">Applicant Name</p><p className="font-medium">{request.userName}</p></div>
-                <div><p className="text-sm text-muted-foreground mb-1">Submitted On</p><p className="font-medium">{formatDateTime(request.createdAt)}</p></div>
-                <div><p className="text-sm text-muted-foreground mb-1">Last Updated</p><p className="font-medium">{formatDateTime(request.updatedAt)}</p></div>
+
+              {/* Status Timeline */}
+              {(() => {
+                const stages = [
+                  { key: "pending", label: "Pending", desc: "Request created, awaiting verification" },
+                  { key: "submitted", label: "Submitted", desc: "Identity verified, awaiting review" },
+                  { key: "under_review", label: "Under Review", desc: "Admin is reviewing your request" },
+                  { key: "processing", label: "Processing", desc: "Request is being actioned" },
+                  { key: "completed", label: "Completed", desc: "Request fully resolved" },
+                ];
+                const order = ["pending", "submitted", "under_review", "processing", "completed"];
+                const currentIdx = order.indexOf(request.status);
+                return (
+                  <div className="mb-8 pb-8 border-b border-border">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-5">Progress</p>
+                    <div className="space-y-0">
+                      {stages.map((stage, idx) => {
+                        const isDone = idx < currentIdx;
+                        const isActive = idx === currentIdx;
+                        const isPast = idx > currentIdx;
+                        return (
+                          <div key={stage.key} className={`status-timeline-step flex items-start gap-4 pb-5 ${isDone ? "completed" : ""}`}>
+                            <div className={`w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center border-2 relative ${
+                              isDone ? "bg-foreground border-foreground text-background" :
+                              isActive ? "bg-background border-foreground text-foreground" :
+                              "bg-background border-border text-muted-foreground"
+                            }`}>
+                              {isDone ? (
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                              ) : (
+                                <span className={`text-xs font-bold ${isActive ? "text-foreground" : "text-muted-foreground"}`}>{idx + 1}</span>
+                              )}
+                            </div>
+                            <div className="pt-1.5">
+                              <p className={`text-sm font-semibold ${isPast ? "text-muted-foreground" : "text-foreground"}`}>{stage.label}</p>
+                              {isActive && <p className="text-xs text-muted-foreground mt-0.5">{stage.desc}</p>}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Info Cards — Step 8 */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div className="info-card">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <svg className="w-3.5 h-3.5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                    <p className="text-xs text-muted-foreground font-medium">Request Type</p>
+                  </div>
+                  <p className="font-semibold text-sm capitalize">{request.requestType}</p>
+                </div>
+                <div className="info-card">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <svg className="w-3.5 h-3.5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                    <p className="text-xs text-muted-foreground font-medium">Applicant</p>
+                  </div>
+                  <p className="font-semibold text-sm">{request.userName}</p>
+                </div>
+                <div className="info-card">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <svg className="w-3.5 h-3.5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    <p className="text-xs text-muted-foreground font-medium">Submitted On</p>
+                  </div>
+                  <p className="font-semibold text-sm">{formatDateTime(request.createdAt)}</p>
+                </div>
+                <div className="info-card">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <svg className="w-3.5 h-3.5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <p className="text-xs text-muted-foreground font-medium">Last Updated</p>
+                  </div>
+                  <p className="font-semibold text-sm">{formatDateTime(request.updatedAt)}</p>
+                </div>
                 {request.status !== "completed" && request.status !== "rejected" && (
                   <>
-                    <div><p className="text-sm text-muted-foreground mb-1">Deadline</p><p className="font-medium">{formatDate(request.deadline)}</p></div>
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Time Remaining</p>
-                      <p className={`font-medium ${getDaysRemainingTheme(request.daysRemaining)}`}>
+                    <div className="info-card">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <svg className="w-3.5 h-3.5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                        <p className="text-xs text-muted-foreground font-medium">Deadline</p>
+                      </div>
+                      <p className="font-semibold text-sm">{formatDate(request.deadline)}</p>
+                    </div>
+                    <div className="info-card">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <svg className="w-3.5 h-3.5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                        <p className="text-xs text-muted-foreground font-medium">Time Remaining</p>
+                      </div>
+                      <p className={`font-semibold text-sm ${getDaysRemainingTheme(request.daysRemaining)}`}>
                         {request.daysRemaining != null ? `${request.daysRemaining} days` : "N/A"}
                       </p>
                     </div>
                   </>
                 )}
                 {request.completedAt && (
-                  <div className="col-span-1 sm:col-span-2 lg:col-span-3 pt-4">
-                    <div className="bg-green-50/50 border border-green-100 p-4 rounded-sm">
-                      <p className="text-sm text-green-800 font-medium mb-1">Completed On</p>
-                      <p className="font-semibold text-green-900">{formatDateTime(request.completedAt)}</p>
+                  <div className="info-card col-span-2 sm:col-span-3 bg-green-50/60 border-green-100">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <svg className="w-3.5 h-3.5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      <p className="text-xs text-green-700 font-medium">Completed On</p>
                     </div>
+                    <p className="font-semibold text-sm text-green-900">{formatDateTime(request.completedAt)}</p>
                   </div>
                 )}
               </div>
+
+              {/* Action banners */}
+              {request.status === "pending" && !request.emailVerified && (
+                <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                  <p className="text-sm font-semibold text-amber-800 mb-1">⏳ Action Required — Verify Your Email</p>
+                  <p className="text-sm text-amber-700">Check your inbox and click the verification link we sent. Your request will not be reviewed until email is verified.</p>
+                </div>
+              )}
+              {request.status === "pending" && request.emailVerified && request.userPhone && !request.phoneVerified && (
+                <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                  <p className="text-sm font-semibold text-amber-800 mb-1">⏳ Action Required — Verify Your Phone</p>
+                  <p className="text-sm text-amber-700">Your email is verified but phone verification is still pending. Go back to the submission form to complete it.</p>
+                </div>
+              )}
+              {request.status === "submitted" && (
+                <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm font-semibold text-blue-800 mb-1">✓ Identity Verified — Pending Admin Review</p>
+                  <p className="text-sm text-blue-700">Your identity has been verified. Our team will review your request and update the status shortly.</p>
+                </div>
+              )}
             </CardContent>
           </Card>
-          <p className="text-center text-xs text-muted-foreground mt-4">Status refreshes automatically.</p>
+
+          {request.status === "completed" && (
+            <DsarResults token={request.token} status={request.status} />
+          )}
         </div>
       )}
     </div>
