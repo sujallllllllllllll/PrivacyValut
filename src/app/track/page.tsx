@@ -137,6 +137,7 @@ export default function TrackPage() {
                   <p className="text-sm font-semibold text-blue-800 mb-1">✓ Identity Verified — Pending Admin Review</p>
                   <p className="text-sm text-blue-700">Your identity has been verified. Our team will review your request and update the status shortly.</p>
                 </div>
+<<<<<<< HEAD
               )}
             </CardContent>
           </Card>
