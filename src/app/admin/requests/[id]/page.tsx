@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { formatStatus, getStatusTheme, getDaysRemainingTheme, formatDateTime, getDaysRemaining } from "@/lib/utils";
 import { StatusUpdater } from "./status-updater";
 import { AiSummary } from "./ai-summary";
+import { ProcessorPropagation } from "./processor-propagation";
 
 export const dynamic = "force-dynamic";
 
@@ -77,6 +78,15 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
             </CardHeader>
             <AiSummary requestId={id} />
           </Card>
+
+          {(req.request_type === "access" || req.request_type === "erasure" || req.request_type === "modify") && (
+            <ProcessorPropagation
+              requestId={id}
+              requestType={req.request_type}
+              userEmail={req.user_email}
+              userName={req.user_name}
+            />
+          )}
         </div>
 
         <div className="space-y-6">

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/form";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatStatus, getStatusTheme, getDaysRemainingTheme, formatDate, formatDateTime } from "@/lib/utils";
+import { DsarResults } from "./dsar-results";
 
 type DsarStatus = {
   token: string; requestType: string; status: string; userName: string;
@@ -108,7 +109,13 @@ export default function TrackPage() {
               </div>
             </CardContent>
           </Card>
-          <p className="text-center text-xs text-muted-foreground mt-4">Status refreshes automatically.</p>
+          
+          {/* Display data or proof of action if completed */}
+          {request.status === "completed" && (
+            <DsarResults token={request.token} status={request.status} />
+          )}
+
+          <p className="text-center text-xs text-muted-foreground mt-6">Status refreshes automatically.</p>
         </div>
       )}
     </div>
