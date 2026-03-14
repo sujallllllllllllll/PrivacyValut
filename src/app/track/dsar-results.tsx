@@ -3,9 +3,18 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { formatDateTime } from "@/lib/utils";
 
+type ProcessorResult = {
+  processorId: string;
+  processorName: string;
+  type: string;
+  data: Record<string, unknown> | null;
+  action?: string;
+  timestamp?: string | null;
+};
+
 type ResultData = {
   type: string;
-  results: any[];
+  results: ProcessorResult[];
   totalSystems?: number;
   foundInSystems?: number;
   actionedSystems?: number;
@@ -179,8 +188,8 @@ export function DsarResults({ token, status }: { token: string; status: string }
 
                   {/* Action Cards */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {data.results.map((p: any, idx: number) => {
-                      const isActioned = p.timestamp !== null;
+                    {data.results.map((p, idx) => {
+                      const isActioned = p.timestamp != null;
                       return (
                         <div key={idx} className={`border rounded-lg p-4 shadow-sm flex flex-col transition-all duration-300 ${isActioned ? (data.type === "erasure" ? "bg-red-50/20 border-red-100" : "bg-amber-50/20 border-amber-100") : "bg-white border-border border-blue-100"}`}>
                           <div className="mb-3 pb-2 flex-grow-0 border-b border-gray-100 flex items-start justify-between">
