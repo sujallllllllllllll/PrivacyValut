@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ token: data.token, id: data.id, deadline: data.deadline }, { status: 201 });
   } catch (err) {
-    console.error("Submit DSAR error:", err);
+    console.error("Submit DSAR error:", String(err).replace(/[\r\n]/g, " "));
     return NextResponse.json({ message: "Failed to submit request" }, { status: 500 });
   }
 }

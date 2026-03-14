@@ -45,7 +45,7 @@ export async function GET(
         .select("processor")
         .eq("request_id", id);
       (logs || []).forEach(l => actionedSet.add(l.processor));
-    } else if (requestType === "modify") {
+    } else if (requestType === "correction") {
       const { data: logs } = await supabase
         .from("processor_modification_log")
         .select("processor")

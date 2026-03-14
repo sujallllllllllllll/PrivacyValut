@@ -85,7 +85,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ tok
       return NextResponse.json({ type: "erasure", results, totalSystems: results.length, actionedSystems });
     }
 
-    if (request_type === "modify") {
+    if (request_type === "correction") {
       const { data: logs } = await supabase
         .from("processor_modification_log")
         .select("processor, modified_at")
