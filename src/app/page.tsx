@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Layout } from "@/components/layout";
-import { Button } from "@/components/ui/button";
 
 export default function HomePage() {
   return (
@@ -19,11 +18,17 @@ export default function HomePage() {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-          <Link href="/submit">
-            <Button size="lg" className="w-full sm:w-auto text-base">Submit a Request &rarr;</Button>
+          <Link
+            href="/submit"
+            className="inline-flex h-12 w-full sm:w-auto items-center justify-center rounded-sm bg-primary px-6 text-base font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            Submit a Request &rarr;
           </Link>
-          <Link href="/track">
-            <Button size="lg" variant="outline" className="w-full sm:w-auto text-base">Track Existing Request</Button>
+          <Link
+            href="/track"
+            className="inline-flex h-12 w-full sm:w-auto items-center justify-center rounded-sm border border-input bg-background px-6 text-base font-medium transition-colors hover:bg-secondary"
+          >
+            Track Existing Request
           </Link>
         </div>
 

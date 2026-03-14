@@ -2,7 +2,6 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase-browser";
 
 const STATUSES = ["submitted", "under_review", "processing", "completed", "rejected"] as const;
 type Status = typeof STATUSES[number];
@@ -10,15 +9,27 @@ type Status = typeof STATUSES[number];
 export function StatusUpdater({ id, currentStatus }: { id: string; currentStatus: string }) {
   const [selected, setSelected] = useState<Status>(currentStatus as Status);
   const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState("");
   const router = useRouter();
 
   async function handleSave() {
+    setError("");
     startTransition(async () => {
-      const supabase = createClient();
-      const updateData: Record<string, unknown> = { status: selected, updated_at: new Date().toISOString() };
-      if (selected === "completed") updateData.completed_at = new Date().toISOString();
-      await supabase.from("dsar_requests").update(updateData).eq("id", id);
-      router.refresh();
+      try {
+        const res = await fetch("/api/admin/requests", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, status: selected }),
+        });
+        if (!res.ok) {
+          const data = await res.json();
+          setError(data.message || "Failed to update status");
+          return;
+        }
+        router.refresh();
+      } catch {
+        setError("Network error. Please try again.");
+      }
     });
   }
 
@@ -39,6 +50,10 @@ export function StatusUpdater({ id, currentStatus }: { id: string; currentStatus
           {isPending ? "Saving..." : "Save"}
         </Button>
       </div>
+      {error && <p className="text-xs text-destructive">{error}</p>}
+      {isPending && selected === "completed" && (
+        <p className="text-xs text-muted-foreground">Generating certificate & AI summary…</p>
+      )}
     </div>
   );
 }

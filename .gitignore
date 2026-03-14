@@ -2,3 +2,9 @@ node_modules/
 .next/
 .env.local
 .env
+
+# Agent / AI tooling — never commit
+.agent/
+
+# Scratch / brainstorm files
+ideas.md

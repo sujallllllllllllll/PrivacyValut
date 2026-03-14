@@ -4,11 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/form";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatStatus, getStatusTheme, getDaysRemainingTheme, formatDate, formatDateTime } from "@/lib/utils";
+import { CertificateDownload } from "@/components/certificate-download";
 
 type DsarStatus = {
   token: string; requestType: string; status: string; userName: string;
   createdAt: string; deadline: string | null; updatedAt: string;
   completedAt: string | null; daysRemaining: number | null;
+  certId: string | null;
+  aiSummaryEn: string | null;
+  aiSummaryHi: string | null;
 };
 
 export default function TrackPage() {
@@ -17,6 +21,7 @@ export default function TrackPage() {
   const [request, setRequest] = useState<DsarStatus | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [summaryLang, setSummaryLang] = useState<"en" | "hi">("en");
 
   const fetchRequest = useCallback(async (token: string) => {
     if (!token) return;
@@ -66,7 +71,7 @@ export default function TrackPage() {
       )}
 
       {request && (
-        <div className="mt-12">
+        <div className="mt-12 space-y-6">
           <Card>
             <CardContent className="p-8">
               <div className="flex flex-col md:flex-row justify-between md:items-start gap-6 mb-8">
@@ -108,7 +113,55 @@ export default function TrackPage() {
               </div>
             </CardContent>
           </Card>
-          <p className="text-center text-xs text-muted-foreground mt-4">Status refreshes automatically.</p>
+
+          {/* Certificate Download — only when completed */}
+          {request.status === "completed" && request.certId && (
+            <Card className="border-green-200">
+              <CardContent className="p-6 space-y-4">
+                <div>
+                  <p className="text-sm font-semibold mb-1">📜 Compliance Certificate</p>
+                  <p className="text-xs text-muted-foreground">
+                    Your request has been fulfilled and a cryptographic certificate has been issued.
+                    This certificate is SHA-256 signed and can be independently verified.
+                  </p>
+                </div>
+                <CertificateDownload certId={request.certId} />
+              </CardContent>
+            </Card>
+          )}
+
+          {/* AI Fulfillment Summary — only when completed */}
+          {request.status === "completed" && (request.aiSummaryEn || request.aiSummaryHi) && (
+            <Card className="border-blue-100">
+              <CardContent className="p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold">🤖 What This Means (Plain Language)</p>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => setSummaryLang("en")}
+                      className={`px-3 py-1 text-xs rounded-sm border font-medium transition-colors ${
+                        summaryLang === "en" ? "bg-primary text-primary-foreground border-primary" : "border-input hover:bg-secondary"
+                      }`}
+                    >EN</button>
+                    <button
+                      onClick={() => setSummaryLang("hi")}
+                      className={`px-3 py-1 text-xs rounded-sm border font-medium transition-colors ${
+                        summaryLang === "hi" ? "bg-primary text-primary-foreground border-primary" : "border-input hover:bg-secondary"
+                      }`}
+                    >हिं</button>
+                  </div>
+                </div>
+                <p className="text-sm leading-relaxed text-foreground">
+                  {summaryLang === "en" ? request.aiSummaryEn : request.aiSummaryHi}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  AI-generated summary for clarity. Official record is the compliance certificate above.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
+          <p className="text-center text-xs text-muted-foreground">Status refreshes automatically.</p>
         </div>
       )}
     </div>

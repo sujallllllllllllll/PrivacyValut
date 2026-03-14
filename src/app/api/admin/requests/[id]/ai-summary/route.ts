@@ -49,8 +49,8 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
       if (res.ok) {
         const aiData = (await res.json()) as { content?: Array<{ text?: string }> };
         const text = aiData?.content?.[0]?.text || "";
-        summary = text.match(/SUMMARY:\s*(.+?)(?=RECOMMENDED ACTION:|$)/s)?.[1]?.trim() ?? text.trim();
-        recommendedAction = text.match(/RECOMMENDED ACTION:\s*(.+?)$/s)?.[1]?.trim() ?? "Review and process within the legal deadline.";
+        summary = text.match(/SUMMARY:\s*([\s\S]+?)(?=RECOMMENDED ACTION:|$)/)?.[1]?.trim() ?? text.trim();
+        recommendedAction = text.match(/RECOMMENDED ACTION:\s*([\s\S]+?)$/)?.[1]?.trim() ?? "Review and process within the legal deadline.";
       } else {
         throw new Error("AI API non-OK");
       }

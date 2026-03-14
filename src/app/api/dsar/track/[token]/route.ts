@@ -27,7 +27,11 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ tok
       updatedAt: data.updated_at,
       completedAt: data.completed_at ?? null,
       daysRemaining: getDaysRemaining(data.deadline),
+      certId: data.cert_id ?? null,
+      aiSummaryEn: data.ai_summary_en ?? null,
+      aiSummaryHi: data.ai_summary_hi ?? null,
     });
+
   } catch (err) {
     console.error("Track DSAR error:", err);
     return NextResponse.json({ message: "Failed to track request" }, { status: 500 });

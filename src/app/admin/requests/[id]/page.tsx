@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { formatStatus, getStatusTheme, getDaysRemainingTheme, formatDateTime, getDaysRemaining } from "@/lib/utils";
 import { StatusUpdater } from "./status-updater";
 import { AiSummary } from "./ai-summary";
+import { LedgerView } from "./ledger-view";
 
 export const dynamic = "force-dynamic";
 
@@ -108,6 +109,15 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
                 <p className="text-sm text-muted-foreground">{formatDateTime(req.updated_at)}</p>
               </div>
             </CardContent>
+          </Card>
+
+          {/* Immutable Compliance Ledger */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">🔗 Compliance Ledger</CardTitle>
+              <CardDescription>Tamper-proof hash-chain audit trail (DPDP Act 2023)</CardDescription>
+            </CardHeader>
+            <LedgerView dsarId={id} />
           </Card>
         </div>
       </div>
