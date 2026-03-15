@@ -73,12 +73,47 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
                   <p className="font-medium">{req.user_phone || "Not provided"}</p>
                 </div>
               </div>
-              <div className="pt-4 border-t border-border">
-                <p className="text-sm font-medium text-muted-foreground mb-3">Additional Context</p>
-                <p className="whitespace-pre-wrap text-sm leading-relaxed bg-muted/30 p-4 rounded-sm border border-border/50 min-h-[100px]">
-                  {req.request_details || "No additional details provided by the citizen."}
-                </p>
-              </div>
+              {req.request_type === "correction" && (() => {
+                let parsed: { corrections?: Record<string, string>; additional?: string } | null = null;
+                try { parsed = req.request_details ? JSON.parse(req.request_details) : null; } catch { /* plain text */ }
+                const corrections = parsed?.corrections;
+                const additional = parsed?.additional;
+                const LABELS: Record<string, string> = { full_name: "Full Name", email: "Email", phone: "Phone", address: "Address" };
+                return (
+                  <>
+                    {corrections && Object.keys(corrections).length > 0 && (
+                      <div className="pt-4 border-t border-border">
+                        <p className="text-sm font-medium text-amber-700 mb-3 flex items-center gap-1.5">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                          Requested Corrections
+                        </p>
+                        <div className="space-y-2">
+                          {Object.entries(corrections).map(([key, val]) => (
+                            <div key={key} className="flex items-start gap-3 bg-amber-50/60 border border-amber-200 rounded-sm px-3 py-2">
+                              <span className="text-xs font-semibold text-amber-700 uppercase tracking-wide w-24 shrink-0 pt-0.5">{LABELS[key] ?? key.replace(/_/g, " ")}</span>
+                              <span className="text-sm font-medium text-foreground">→ {val}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <div className="pt-4 border-t border-border">
+                      <p className="text-sm font-medium text-muted-foreground mb-3">Additional Context</p>
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed bg-muted/30 p-4 rounded-sm border border-border/50 min-h-[80px]">
+                        {(corrections ? additional : req.request_details) || "No additional details provided by the citizen."}
+                      </p>
+                    </div>
+                  </>
+                );
+              })()}
+              {req.request_type !== "correction" && (
+                <div className="pt-4 border-t border-border">
+                  <p className="text-sm font-medium text-muted-foreground mb-3">Additional Context</p>
+                  <p className="whitespace-pre-wrap text-sm leading-relaxed bg-muted/30 p-4 rounded-sm border border-border/50 min-h-[100px]">
+                    {req.request_details || "No additional details provided by the citizen."}
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -92,12 +127,19 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
             <AiSummary requestId={id} />
           </Card>
 
-          {(req.request_type === "access" || req.request_type === "erasure" || req.request_type === "modify") && (
+          {(req.request_type === "access" || req.request_type === "erasure" || req.request_type === "correction") && (
             <ProcessorPropagation
               requestId={id}
               requestType={req.request_type}
               userEmail={req.user_email}
               userName={req.user_name}
+              requestedCorrections={(() => {
+                if (req.request_type !== "correction" || !req.request_details) return undefined;
+                try {
+                  const parsed = JSON.parse(req.request_details);
+                  return parsed.corrections ?? undefined;
+                } catch { return undefined; }
+              })()}
             />
           )}
         </div>

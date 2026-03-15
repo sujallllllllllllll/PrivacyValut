@@ -31,6 +31,7 @@ export default function SubmitPage() {
   const [isSendingOtp, setIsSendingOtp] = useState(false);
 
   // Saved from DB record created during OTP step
+  const [correctionFields, setCorrectionFields] = useState<Record<string, string>>({});
   const [tempRequestId, setTempRequestId] = useState<string | null>(null);
   const [tempToken, setTempToken] = useState<string | null>(null);
   const [tempDeadline, setTempDeadline] = useState<string | null>(null);
@@ -121,6 +122,14 @@ export default function SubmitPage() {
     setIsPending(true);
     setServerError("");
 
+    // Encode correction fields as JSON if this is a correction request
+    const nonEmptyCorrections = Object.fromEntries(
+      Object.entries(correctionFields).filter(([, v]) => v.trim() !== "")
+    );
+    const encodedDetails = values.requestType === "correction"
+      ? JSON.stringify({ corrections: nonEmptyCorrections, additional: values.requestDetails ?? "" })
+      : values.requestDetails;
+
     try {
       // Phone was verified — record already exists, PATCH it with the currently selected requestType
       if (tempRequestId && phoneVerified && tempToken) {
@@ -130,7 +139,7 @@ export default function SubmitPage() {
           body: JSON.stringify({
             id: tempRequestId,
             requestType: values.requestType,
-            requestDetails: values.requestDetails,
+            requestDetails: encodedDetails,
           }),
         });
         if (!patchRes.ok) {
@@ -145,7 +154,7 @@ export default function SubmitPage() {
       const res = await fetch("/api/dsar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
+        body: JSON.stringify({ ...values, requestDetails: encodedDetails }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to submit");
@@ -354,12 +363,43 @@ export default function SubmitPage() {
               </div>
             </div>
 
+            {form.watch("requestType") === "correction" && (
+              <div className="space-y-3 p-4 bg-amber-50/60 border-2 border-amber-200 rounded-lg">
+                <p className="text-sm font-semibold text-amber-800 flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  What needs to be corrected? (fill in new values)
+                </p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {([
+                    { key: "full_name", label: "Full Name", placeholder: "Correct full name" },
+                    { key: "email",     label: "Email",     placeholder: "Correct email address" },
+                    { key: "phone",     label: "Phone",     placeholder: "Correct phone number" },
+                    { key: "address",   label: "Address",   placeholder: "Correct address" },
+                  ] as const).map(({ key, label, placeholder }) => (
+                    <div key={key} className="space-y-1">
+                      <label className="text-xs font-semibold text-amber-700 uppercase tracking-wide">{label}</label>
+                      <input
+                        type="text"
+                        placeholder={placeholder}
+                        value={correctionFields[key] ?? ""}
+                        onChange={(e) => setCorrectionFields((prev) => ({ ...prev, [key]: e.target.value }))}
+                        className="w-full border border-amber-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 bg-white placeholder:text-amber-300/70"
+                      />
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-amber-700/70">Leave a field blank if it does not need correction.</p>
+              </div>
+            )}
+
             <div className="space-y-2.5">
               <Label htmlFor="requestDetails" className="flex items-center gap-2">
                 <svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
                 </svg>
-                Additional Details (Optional)
+                {form.watch("requestType") === "correction" ? "Additional Context (Optional)" : "Additional Details (Optional)"}
               </Label>
               <Textarea id="requestDetails" placeholder="Provide any specific context..." className="min-h-[120px]" {...form.register("requestDetails")} />
             </div>

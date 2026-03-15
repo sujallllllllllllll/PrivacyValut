@@ -54,7 +54,19 @@ export async function GET(
     }
 
     const results = processors.map((processor) => {
-      const found = citizenEmail in processor.records;
+      let found = citizenEmail in processor.records;
+      let recordKey = citizenEmail;
+
+      if (!found) {
+        for (const [key, value] of Object.entries(processor.records)) {
+          if (value && typeof value === 'object' && (value as any).email === citizenEmail) {
+            found = true;
+            recordKey = key;
+            break;
+          }
+        }
+      }
+
       const isActioned = actionedSet.has(processor.id);
       
       return {
@@ -64,7 +76,7 @@ export async function GET(
         found,
         deleted: (requestType === "erasure" && isActioned),
         modified: (requestType === "modify" && isActioned),
-        data: found ? processor.records[citizenEmail] : null,
+        data: found ? processor.records[recordKey] : null,
       };
     });
 

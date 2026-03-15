@@ -43,22 +43,7 @@ export async function POST(
 
     const toModifySet = new Set(processorIds);
 
-    // Actually apply corrections to the user's record in each selected processor
-    for (const processor of processors) {
-      if (toModifySet.has(processor.id) && userEmail in processor.records) {
-        const fields = corrections[processor.id];
-        if (fields && typeof fields === "object") {
-          processor.records[userEmail] = {
-            ...(processor.records[userEmail] as Record<string, unknown>),
-            ...fields,
-          };
-        }
-      }
-    }
-
-    writeFileSync(filePath, JSON.stringify(processors, null, 2), "utf-8");
-
-    // Log the modification
+    // Log the modification FIRST to prevent out-of-sync state if DB is missing
     const rows = processorIds.map((processor) => ({
       request_id: id,
       processor,
@@ -69,8 +54,45 @@ export async function POST(
     const { error } = await supabase.from("processor_modification_log").insert(rows);
     if (error) {
       console.error("Modification log insert error:", error);
-      return NextResponse.json({ message: "Failed to log modification" }, { status: 500 });
+      return NextResponse.json({ message: "Failed to log modification. Did you run the SQL migration?" }, { status: 500 });
     }
+
+    // Actually apply corrections to the user's record in each selected processor
+    for (const processor of processors) {
+      if (toModifySet.has(processor.id)) {
+        let recordKey = userEmail;
+        let found = userEmail in processor.records;
+
+        // Fallback: search by 'email' field inside the record if key not found
+        if (!found) {
+          for (const [key, value] of Object.entries(processor.records)) {
+            if (value && typeof value === "object" && (value as any).email === userEmail) {
+              found = true;
+              recordKey = key;
+              break;
+            }
+          }
+        }
+
+        if (found) {
+          const fields = corrections[processor.id];
+          if (fields && typeof fields === "object") {
+            processor.records[recordKey] = {
+              ...(processor.records[recordKey] as Record<string, unknown>),
+              ...fields,
+            };
+
+            // If the email was changed, update the primary key to the new email
+            if (fields.email && typeof fields.email === "string" && fields.email !== recordKey) {
+              processor.records[fields.email] = processor.records[recordKey];
+              delete processor.records[recordKey];
+            }
+          }
+        }
+      }
+    }
+
+    writeFileSync(filePath, JSON.stringify(processors, null, 2), "utf-8");
 
     // Update status based on progress
     try {
@@ -103,6 +125,6 @@ export async function POST(
     return NextResponse.json({ success: true, modified: processorIds });
   } catch (err) {
     console.error("Processor modify error:", err);
-    return NextResponse.json({ message: "Failed to process modification" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to process modification", error: err instanceof Error ? err.message : String(err), stack: err instanceof Error ? err.stack : undefined }, { status: 500 });
   }
 }

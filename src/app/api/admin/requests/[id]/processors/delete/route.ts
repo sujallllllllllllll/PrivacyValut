@@ -41,16 +41,7 @@ export async function POST(
 
     const toDeleteSet = new Set(processorIds);
 
-    // Actually delete the user's record from each selected processor
-    for (const processor of processors) {
-      if (toDeleteSet.has(processor.id) && userEmail in processor.records) {
-        delete processor.records[userEmail];
-      }
-    }
-
-    writeFileSync(filePath, JSON.stringify(processors, null, 2), "utf-8");
-
-    // Log the deletion
+    // Log the deletion FIRST to prevent out-of-sync state if DB is missing
     const rows = processorIds.map((processor) => ({
       request_id: id,
       processor,
@@ -61,8 +52,27 @@ export async function POST(
     const { error } = await supabase.from("processor_deletion_log").insert(rows);
     if (error) {
       console.error("Deletion log insert error:", error);
-      return NextResponse.json({ message: "Failed to log deletion" }, { status: 500 });
+      return NextResponse.json({ message: "Failed to log deletion. Did you run the SQL migration?" }, { status: 500 });
     }
+
+    // Actually delete the user's record from each selected processor
+    for (const processor of processors) {
+      if (toDeleteSet.has(processor.id)) {
+        if (userEmail in processor.records) {
+          delete processor.records[userEmail];
+        } else {
+          // Fallback search
+          for (const [key, value] of Object.entries(processor.records)) {
+            if (value && typeof value === "object" && (value as any).email === userEmail) {
+              delete processor.records[key];
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    writeFileSync(filePath, JSON.stringify(processors, null, 2), "utf-8");
 
     // Update status based on progress
     try {

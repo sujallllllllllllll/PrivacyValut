@@ -244,10 +244,10 @@
         "city": "Pune",
         "language": "English"
       },
-      "kavita.pawar@gmail.com": {
+      "kavi26@gmail.com": {
         "contact_id": "TP-C-77603",
-        "full_name": "Kavita Pawar",
-        "email": "kavita.pawar@gmail.com",
+        "full_name": "kavi",
+        "email": "kavi26@gmail.com",
         "phone": "+91 93456 78901",
         "segments": [
           "Women 35-50",
@@ -383,9 +383,9 @@
           }
         ]
       },
-      "kavita.pawar@gmail.com": {
+      "kavi26@gmail.com": {
         "user_id": "IM-U-91D2C3",
-        "email": "kavita.pawar@gmail.com",
+        "email": "kavi26@gmail.com",
         "first_seen": "2023-09-01",
         "last_seen": "2024-02-18",
         "total_sessions": 44,
@@ -407,7 +407,8 @@
             "event": "product_view",
             "count": 89
           }
-        ]
+        ],
+        "full_name": "kavi"
       }
     }
   }

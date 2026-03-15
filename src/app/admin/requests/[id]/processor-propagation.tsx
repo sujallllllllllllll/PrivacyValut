@@ -110,9 +110,10 @@ type Props = {
   requestType: string;
   userEmail: string;
   userName: string;
+  requestedCorrections?: Record<string, string>;
 };
 
-export function ProcessorPropagation({ requestId, requestType, userEmail, userName }: Props) {
+export function ProcessorPropagation({ requestId, requestType, userEmail, userName, requestedCorrections }: Props) {
   const [processorStates, setProcessorStates] = useState<ProcessorState[]>([]);
   const [phase, setPhase] = useState<"idle" | "fetching" | "done">("idle");
   const [isActioning, setIsActioning] = useState(false);
@@ -140,14 +141,14 @@ export function ProcessorPropagation({ requestId, requestType, userEmail, userNa
       selected: false,
       deleted: p.deleted || false,
       modified: p.modified || false,
-      corrections: {},
+      corrections: requestedCorrections ?? {},
     }));
     setProcessorStates(initial);
 
     for (let i = 0; i < processors.length; i++) {
       setProcessorStates((prev) => prev.map((p, idx) => idx === i ? { ...p, status: "loading" } : p));
       await delay(randomBetween(400, 700));
-      setProcessorStates((prev) => prev.map((p, idx) => idx === i ? { ...p, ...processors[i], status: "done", corrections: {} } : p));
+      setProcessorStates((prev) => prev.map((p, idx) => idx === i ? { ...p, ...processors[i], status: "done", corrections: p.corrections } : p));
     }
 
     setPhase("done");
@@ -331,6 +332,12 @@ export function ProcessorPropagation({ requestId, requestType, userEmail, userNa
           <CardDescription>
             Fetch and review personal data held by third-party data processors for this citizen.
           </CardDescription>
+          {requestedCorrections && Object.keys(requestedCorrections).length > 0 && (
+            <p className="text-xs text-amber-700 mt-1.5 flex items-center gap-1">
+              <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              Correction inputs pre-filled from citizen&apos;s request
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           {allDone && (
