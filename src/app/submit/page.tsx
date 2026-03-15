@@ -267,7 +267,7 @@ export default function SubmitPage() {
                   <svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                   </svg>
-                  Phone Number (Optional)
+                  Phone Number
                 </Label>
 
                 {/* Phone input row */}
@@ -342,15 +342,21 @@ export default function SubmitPage() {
                 </Label>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {([
-                    { value: "access", label: "Right to Access", desc: "Get a copy of your personal data", icon: (
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                    )},
-                    { value: "correction", label: "Right to Correction", desc: "Fix inaccurate data we hold", icon: (
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                    )},
-                    { value: "erasure", label: "Right to Erasure", desc: "Delete your data permanently", icon: (
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                    )},
+                    {
+                      value: "access", label: "Right to Access", desc: "Get a copy of your personal data", icon: (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                      )
+                    },
+                    {
+                      value: "correction", label: "Right to Correction", desc: "Fix inaccurate data we hold", icon: (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                      )
+                    },
+                    {
+                      value: "erasure", label: "Right to Erasure", desc: "Delete your data permanently", icon: (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      )
+                    },
                   ] as const).map(({ value, label, desc, icon }) => (
                     <button
                       key={value}
@@ -358,11 +364,10 @@ export default function SubmitPage() {
                       onClick={() => form.setValue("requestType", value)}
                       className={`request-type-card text-left ${form.watch("requestType") === value ? "selected" : ""}`}
                     >
-                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center mb-2.5 ${
-                        value === "access" ? "bg-blue-50 text-blue-600" :
-                        value === "correction" ? "bg-amber-50 text-amber-600" :
-                        "bg-red-50 text-red-600"
-                      }`}>{icon}</div>
+                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center mb-2.5 ${value === "access" ? "bg-blue-50 text-blue-600" :
+                          value === "correction" ? "bg-amber-50 text-amber-600" :
+                            "bg-red-50 text-red-600"
+                        }`}>{icon}</div>
                       <p className="font-semibold text-sm text-foreground">{label}</p>
                       <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>
                     </button>
@@ -383,9 +388,9 @@ export default function SubmitPage() {
                 <div className="grid gap-3 sm:grid-cols-2">
                   {([
                     { key: "full_name", label: "Full Name", placeholder: "Correct full name" },
-                    { key: "email",     label: "Email",     placeholder: "Correct email address" },
-                    { key: "phone",     label: "Phone",     placeholder: "Correct phone number" },
-                    { key: "address",   label: "Address",   placeholder: "Correct address" },
+                    { key: "email", label: "Email", placeholder: "Correct email address" },
+                    { key: "phone", label: "Phone", placeholder: "Correct phone number" },
+                    { key: "address", label: "Address", placeholder: "Correct address" },
                   ] as const).map(({ key, label, placeholder }) => (
                     <div key={key} className="space-y-1">
                       <label className="text-xs font-semibold text-amber-700 uppercase tracking-wide">{label}</label>

@@ -4,38 +4,6 @@
     "name": "PayFast India",
     "type": "Payment Processor",
     "records": {
-      "priya.sharma@gmail.com": {
-        "account_id": "PF-MH-00412",
-        "full_name": "Priya Sharma",
-        "phone": "+91 98765 43210",
-        "upi_id": "priya.sharma@okicici",
-        "linked_bank": "ICICI Bank, Pune Branch",
-        "transactions": [
-          {
-            "id": "TXN-20240101",
-            "amount": "₹4,500",
-            "merchant": "BigBasket",
-            "date": "2024-01-01",
-            "status": "success"
-          },
-          {
-            "id": "TXN-20240215",
-            "amount": "₹12,000",
-            "merchant": "Myntra",
-            "date": "2024-02-15",
-            "status": "success"
-          },
-          {
-            "id": "TXN-20240310",
-            "amount": "₹850",
-            "merchant": "Swiggy",
-            "date": "2024-03-10",
-            "status": "refunded"
-          }
-        ],
-        "kyc_status": "verified",
-        "registered_on": "2022-08-14"
-      },
       "arjun.mehta@outlook.com": {
         "account_id": "PF-MH-00788",
         "full_name": "Arjun Mehta",
@@ -207,26 +175,6 @@
     "name": "TargetPulse",
     "type": "Marketing Platform",
     "records": {
-      "siddharth.rao@gmail.com": {
-        "contact_id": "TP-C-91045",
-        "full_name": "Siddharth Rao",
-        "email": "siddharth.rao@gmail.com",
-        "phone": "+91 99887 76655",
-        "segments": [
-          "Men 30-40",
-          "Tech Enthusiasts",
-          "Premium Products"
-        ],
-        "email_consent": true,
-        "sms_consent": false,
-        "whatsapp_consent": true,
-        "last_campaign_opened": "iPhone 15 Launch – Sep 2023",
-        "open_rate": "52%",
-        "click_rate": "31%",
-        "unsubscribed": false,
-        "city": "Pune",
-        "language": "English"
-      },
       "kavi26@gmail.com": {
         "contact_id": "TP-C-77603",
         "full_name": "kavi",
@@ -304,68 +252,6 @@
     "name": "InsightMetrics",
     "type": "Analytics Tool",
     "records": {
-      "priya.sharma@gmail.com": {
-        "user_id": "IM-U-55A9F2",
-        "email": "priya.sharma@gmail.com",
-        "first_seen": "2023-02-10",
-        "last_seen": "2024-04-15",
-        "total_sessions": 312,
-        "avg_session_duration": "7m 24s",
-        "most_visited_pages": [
-          "/offers",
-          "/checkout",
-          "/account/settings"
-        ],
-        "device": "iPhone 14, iOS 17.3",
-        "browser": "Safari 17",
-        "ip_country": "India",
-        "ip_city": "Pune",
-        "events": [
-          {
-            "event": "purchase_completed",
-            "count": 18
-          },
-          {
-            "event": "wishlist_add",
-            "count": 54
-          },
-          {
-            "event": "search",
-            "count": 201
-          }
-        ]
-      },
-      "siddharth.rao@gmail.com": {
-        "user_id": "IM-U-77C1E4",
-        "email": "siddharth.rao@gmail.com",
-        "first_seen": "2022-11-05",
-        "last_seen": "2024-04-20",
-        "total_sessions": 528,
-        "avg_session_duration": "12m 10s",
-        "most_visited_pages": [
-          "/electronics",
-          "/compare",
-          "/blog"
-        ],
-        "device": "Samsung Galaxy S23, Android 14",
-        "browser": "Chrome 123",
-        "ip_country": "India",
-        "ip_city": "Pune",
-        "events": [
-          {
-            "event": "purchase_completed",
-            "count": 32
-          },
-          {
-            "event": "product_view",
-            "count": 410
-          },
-          {
-            "event": "review_submitted",
-            "count": 9
-          }
-        ]
-      },
       "kavi26@gmail.com": {
         "user_id": "IM-U-91D2C3",
         "email": "kavi26@gmail.com",
