@@ -11,6 +11,7 @@ type DsarStatus = {
   createdAt: string; deadline: string | null; updatedAt: string;
   completedAt: string | null; daysRemaining: number | null;
   emailVerified: boolean; phoneVerified: boolean; userPhone: string | null;
+  adminNote: string | null;
 };
 
 export default function TrackPage() {
@@ -93,15 +94,22 @@ export default function TrackPage() {
                   { key: "completed", label: "Completed", desc: "Request fully resolved" },
                 ];
                 const order = ["pending", "submitted", "under_review", "processing", "completed"];
-                const currentIdx = order.indexOf(request.status);
+                const isRejected = request.status === "rejected";
+                const currentIdx = isRejected ? order.length : order.indexOf(request.status);
                 return (
                   <div className="mb-8 pb-8 border-b border-border">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-5">Progress</p>
+                    {isRejected && (
+                      <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <p className="text-sm font-semibold text-red-700">✗ Request Rejected</p>
+                        <p className="text-xs text-red-600 mt-0.5">This request has been reviewed and could not be fulfilled.</p>
+                      </div>
+                    )}
                     <div className="space-y-0">
                       {stages.map((stage, idx) => {
                         const isDone = idx < currentIdx;
-                        const isActive = idx === currentIdx;
-                        const isPast = idx > currentIdx;
+                        const isActive = !isRejected && idx === currentIdx;
+                        const isPast = isRejected || idx > currentIdx;
                         return (
                           <div key={stage.key} className={`status-timeline-step flex items-start gap-4 pb-5 ${isDone ? "completed" : ""}`}>
                             <div className={`w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center border-2 relative ${
@@ -116,7 +124,7 @@ export default function TrackPage() {
                               )}
                             </div>
                             <div className="pt-1.5">
-                              <p className={`text-sm font-semibold ${isPast ? "text-muted-foreground" : "text-foreground"}`}>{stage.label}</p>
+                              <p className={`text-sm font-semibold ${isPast && !isDone ? "text-muted-foreground" : "text-foreground"}`}>{stage.label}</p>
                               {isActive && <p className="text-xs text-muted-foreground mt-0.5">{stage.desc}</p>}
                             </div>
                           </div>
@@ -188,6 +196,14 @@ export default function TrackPage() {
                 )}
               </div>
 
+              {/* AI Admin Update Note */}
+              {request.adminNote && (
+                <div className="mt-6 p-4 bg-indigo-50 border border-indigo-200 rounded-lg">
+                  <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-2">📋 Latest Update from Admin</p>
+                  <p className="text-sm text-indigo-900 leading-relaxed">{request.adminNote}</p>
+                </div>
+              )}
+
               {/* Action banners */}
               {request.status === "pending" && !request.emailVerified && (
                 <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
@@ -210,7 +226,7 @@ export default function TrackPage() {
             </CardContent>
           </Card>
 
-          {request.status === "completed" && (
+          {(request.status === "completed" || request.status === "processing") && (
             <DsarResults token={request.token} status={request.status} />
           )}
         </div>

@@ -379,10 +379,12 @@
   /* ===================== SLIDE 3 – SOLUTION ===================== */
   .solution-grid {
     display: grid;
-    grid-template-columns: 1.2fr 1fr;
+    grid-template-columns: 1.3fr 1fr;
     gap: 20px;
     flex: 1;
+    overflow: hidden;
   }
+  .feature-list { overflow-y: auto; }
 
   .feature-list {
     list-style: none;
@@ -478,7 +480,7 @@
   /* ===================== SLIDE 4 – TECH STACK ===================== */
   .tech-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 14px;
     flex: 1;
     align-content: start;
@@ -1013,11 +1015,19 @@
           </li>
           <li>
             <span class="fi">⚙️</span>
-            <div><strong>Admin Review Based Workflows</strong>Admin queue with review, approval, and strong OTP/Aadhaar 2FA verification before processing.</div>
+            <div><strong>Admin Review Based Workflows</strong>Admin queue with review, approval, and Email Token + Phone OTP verification before processing.</div>
           </li>
           <li>
             <span class="fi">📡</span>
             <div><strong>Propagation to All Processors</strong>Deletion/update commands pushed to all branches & processors with confirmation proof.</div>
+          </li>
+          <li>
+            <span class="fi">🔍</span>
+            <div><strong>Request Tracking Portal</strong>Citizens track live DSAR status via unique token — shows progress stages, deadline, days remaining & verification state.</div>
+          </li>
+          <li>
+            <span class="fi">📊</span>
+            <div><strong>Public Compliance Dashboard</strong>Live compliance score, overdue count, avg. resolution days & request breakdown — full DPDP transparency report.</div>
           </li>
           <li>
             <span class="fi">📄</span>
@@ -1041,7 +1051,7 @@
 
           <div class="differentiator">
             <div class="diff-title">🌟 Key Differentiator</div>
-            <div class="diff-body">AI-assisted data inventory + live processor status tracking + instant compliance-proof PDFs — all in one platform, built for India's DPDP Act.</div>
+            <div class="diff-body">Live processor propagation tracking + public compliance dashboard + citizen request tracking — all in one platform, purpose-built for India's DPDP Act.</div>
           </div>
         </div>
       </div>
@@ -1117,39 +1127,30 @@
             <div class="ti-name">Row Level Security (RLS)</div>
             <div class="ti-desc">Granular data access control built-in</div>
           </div>
-          
-        </div>
-
-        <!-- AI -->
-        <div class="tech-category">
-          <div class="tc-header">
-            <div class="tc-icon" style="background:rgba(245,200,66,0.15);">🤖</div>
-            <div class="tc-title">AI Layer</div>
-          </div>
           <div class="tech-item">
-            <div class="ti-name">Gemini API / Grok</div>
-            <div class="ti-desc">Data classification & inventory analysis</div>
-          </div>
-          <div class="tech-item">
-            <div class="ti-name">OCR Simulation</div>
-            <div class="ti-desc">Govt ID verification (Aadhaar 2FA sim)</div>
+            <div class="ti-name">Claude API (Anthropic)</div>
+            <div class="ti-desc">AI DSAR summaries & recommended actions for admins</div>
           </div>
         </div>
 
         <!-- Tools -->
-        <div class="tech-category full-width">
+        <div class="tech-category" style="grid-column: span 2;">
           <div class="tc-header">
             <div class="tc-icon" style="background:rgba(0,210,106,0.15);">🛠️</div>
             <div class="tc-title">Other Tools & Deployment</div>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;">
             <div class="tech-item">
-              <div class="ti-name">jsPDF</div>
+              <div class="ti-name">jsPDF + autotable</div>
               <div class="ti-desc">Compliance-proof PDF generation</div>
             </div>
             <div class="tech-item">
-              <div class="ti-name">Recharts</div>
-              <div class="ti-desc">Compliance score gauges & dashboards</div>
+              <div class="ti-name">Framer Motion</div>
+              <div class="ti-desc">Smooth UI animations & transitions</div>
+            </div>
+            <div class="tech-item">
+              <div class="ti-name">Zod + React Hook Form</div>
+              <div class="ti-desc">Type-safe form validation</div>
             </div>
             <div class="tech-item">
               <div class="ti-name">Vercel (Planned)</div>
@@ -1199,11 +1200,11 @@
         <div>
           <div class="stat-cards">
             <div class="stat-card">
-              <div class="stat-num">&lt;2h</div>
+              <div class="stat-num">~3h</div>
               <div class="stat-label">DSAR Processing<br><span style="color:var(--silver);opacity:0.6">vs. Days/Weeks before</span></div>
             </div>
             <div class="stat-card">
-              <div class="stat-num">95%</div>
+              <div class="stat-num">~90%</div>
               <div class="stat-label">Compliance Score<br><span style="color:var(--silver);opacity:0.6">from 60% baseline</span></div>
             </div>
           </div>
@@ -1215,7 +1216,7 @@
             </div>
             <div class="ba-row">
               <div class="before-v">Weeks to process DSARs</div>
-              <div class="after-v">Under 2 hours, automated</div>
+              <div class="after-v">~3 hours with admin review</div>
             </div>
             <div class="ba-row">
               <div class="before-v">Excel chaos, manual effort</div>
@@ -1236,7 +1237,7 @@
           <ul class="usp-list">
             <li>🇮🇳 <span><strong>India-First:</strong> Purpose-built for DPDP Act + Rules 2025 enforcement reality</span></li>
             <li>🔄 <span><strong>Dual-Sided Platform:</strong> Citizen self-service portal + Admin propagation dashboard</span></li>
-            <li>🔐 <span><strong>Strong Verification:</strong> Email OTP + Aadhaar-linked 2FA simulation</span></li>
+            <li>🔐 <span><strong>Strong Verification:</strong> Email Token + Phone OTP 2FA on every request</span></li>
             <li>📡 <span><strong>Processor Propagation:</strong> API/webhook-ready for real-world integrations (Razorpay, AWS S3)</span></li>
             <li>⚡ <span><strong>Lightweight MVP:</strong> Built in hackathon time, fully scalable to SMEs & enterprises</span></li>
           </ul>
@@ -1289,6 +1290,8 @@
             <span class="phase-tag pt-cyan">🔗 Real Razorpay / AWS S3 deletion APIs</span>
             <span class="phase-tag pt-cyan">📋 Consent Manager registration support</span>
             <span class="phase-tag pt-cyan">📱 Mobile app for citizens</span>
+            <span class="phase-tag pt-cyan">⚡ Automated DSAR processing (&lt;1 hour)</span>
+            <span class="phase-tag pt-cyan">🪪 Govt document-based request submission (Aadhaar / DigiLocker)</span>
           </div>
         </div>
 
@@ -1342,7 +1345,7 @@
       </div>
 
       <div class="contact-info">
-        Team ByteDevs &nbsp;·&nbsp; &nbsp;·&nbsp; ByteCamp '26 &nbsp;·&nbsp; March 2026
+        Team ByteDevs &nbsp;·&nbsp; ByteCamp '26 &nbsp;·&nbsp; March 2026
       </div>
     </div>
   </div>

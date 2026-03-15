@@ -29,6 +29,7 @@ export default function SubmitPage() {
   const [isVerifying, setIsVerifying] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
   const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [otpError, setOtpError] = useState("");
 
   // Saved from DB record created during OTP step
   const [tempRequestId, setTempRequestId] = useState<string | null>(null);
@@ -89,11 +90,11 @@ export default function SubmitPage() {
   // Step 2: Verify OTP
   async function handleVerifyOtp() {
     if (otpValue.length !== 6) {
-      setServerError("OTP must be 6 digits.");
+      setOtpError("OTP must be exactly 6 digits.");
       return;
     }
     setIsVerifying(true);
-    setServerError("");
+    setOtpError("");
     try {
       const res = await fetch("/api/dsar/verify-phone", {
         method: "POST",
@@ -104,8 +105,10 @@ export default function SubmitPage() {
       if (!res.ok) throw new Error(data.message || "Invalid OTP");
       setPhoneVerified(true);
       setOtpSent(false);
+      setOtpError("");
     } catch (e: unknown) {
-      setServerError(e instanceof Error ? e.message : "Failed to verify OTP.");
+      setOtpError(e instanceof Error ? e.message : "Failed to verify OTP.");
+      setOtpValue("");
     } finally {
       setIsVerifying(false);
     }
@@ -291,9 +294,9 @@ export default function SubmitPage() {
                       <Input
                         placeholder="Enter 6-digit OTP"
                         value={otpValue}
-                        onChange={(e) => setOtpValue(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                        onChange={(e) => { setOtpValue(e.target.value.replace(/\D/g, "").slice(0, 6)); setOtpError(""); }}
                         maxLength={6}
-                        className="bg-background font-mono tracking-widest text-center text-lg"
+                        className={`bg-background font-mono tracking-widest text-center text-lg ${otpError ? "border-destructive" : ""}`}
                       />
                       <Button
                         type="button"
@@ -303,6 +306,12 @@ export default function SubmitPage() {
                         {isVerifying ? "Verifying..." : "Verify"}
                       </Button>
                     </div>
+                    {otpError && (
+                      <p className="text-sm text-destructive flex items-center gap-1.5 font-medium">
+                        <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        {otpError}
+                      </p>
+                    )}
                     <button
                       type="button"
                       onClick={handleSendOtp}

@@ -32,6 +32,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ tok
       emailVerified: data.email_verified ?? false,
       phoneVerified: data.phone_verified ?? false,
       userPhone: data.user_phone ?? null,
+      adminNote: data.admin_note ?? null,
     });
   } catch (err) {
     console.error("Track DSAR error:", err);

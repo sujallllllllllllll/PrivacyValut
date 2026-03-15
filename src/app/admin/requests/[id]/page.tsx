@@ -3,7 +3,6 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { formatStatus, getStatusTheme, getDaysRemainingTheme, formatDateTime, getDaysRemaining } from "@/lib/utils";
-import { StatusUpdater } from "./status-updater";
 import { AiSummary } from "./ai-summary";
 import { ProcessorPropagation } from "./processor-propagation";
 
@@ -55,7 +54,13 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
             Requested by <span className="font-semibold text-foreground">{req.user_name}</span> ({req.user_email})
           </p>
         </div>
-        <StatusUpdater id={id} currentStatus={req.status} />
+        <div className="bg-secondary/50 p-4 rounded-sm border border-border flex flex-col gap-2 min-w-[200px]">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Current Status</p>
+          <span className={`px-3 py-1.5 rounded-full text-xs font-bold border-2 shadow-sm self-start ${getStatusTheme(req.status)}`}>
+            {formatStatus(req.status)}
+          </span>
+          <p className="text-xs text-muted-foreground italic">Status updates automatically</p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
@@ -92,7 +97,7 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
             <AiSummary requestId={id} />
           </Card>
 
-          {(req.request_type === "access" || req.request_type === "erasure" || req.request_type === "modify") && (
+          {(req.request_type === "access" || req.request_type === "erasure" || req.request_type === "correction") && (
             <ProcessorPropagation
               requestId={id}
               requestType={req.request_type}

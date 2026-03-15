@@ -128,23 +128,6 @@
           "hot-lead",
           "Maharashtra"
         ]
-      },
-      "siddharth.rao@gmail.com": {
-        "crm_id": "CRM-2024-00512",
-        "full_name": "Siddharth Rao",
-        "email": "siddharth.rao@gmail.com",
-        "phone": "+91 99887 76655",
-        "address": "21, Koregaon Park, Pune, Maharashtra 411001",
-        "lead_source": "LinkedIn Outreach",
-        "deal_stage": "Negotiation",
-        "deal_value": "₹6,00,000",
-        "last_contact": "2024-04-10",
-        "assigned_rep": "Vikram Iyer",
-        "notes": "Requires custom SLA terms. Legal review in progress.",
-        "tags": [
-          "enterprise",
-          "legal-review"
-        ]
       }
     }
   },

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
 import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
+import { generateAndSaveStatusNote } from "@/lib/status-note";
 
 export async function POST(
   req: NextRequest,
@@ -89,6 +90,7 @@ export async function POST(
             .from("dsar_requests")
             .update({ status: "completed", completed_at: new Date().toISOString() })
             .eq("id", id);
+          generateAndSaveStatusNote(supabase, id, reqData.user_email, "correction", "processing", "completed").catch(() => {});
         } else {
           await supabase
             .from("dsar_requests")

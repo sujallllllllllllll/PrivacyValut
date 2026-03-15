@@ -21,10 +21,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ tok
       return NextResponse.json({ message: "Request not found." }, { status: 404 });
     }
 
-    // Only return data if the request is actually completed
-    if (requestData.status !== "completed") {
+    // Only return data if the request is processing or completed
+    if (requestData.status !== "completed" && requestData.status !== "processing") {
       return NextResponse.json({ 
-        message: "Data is only available once the request is completed.", 
+        message: "Data is only available once the request is being processed.", 
         status: requestData.status 
       }, { status: 403 });
     }
@@ -36,14 +36,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ tok
     const raw = readFileSync(filePath, "utf-8");
     const processors: Array<{ id: string; name: string; type: string; records: Record<string, unknown> }> = JSON.parse(raw);
 
-    // Helper to map processor IDs to their friendly names/types
-    const getProcessorInfo = (pid: string) => {
-      const p = processors.find(x => x.id === pid);
-      return p ? { name: p.name, type: p.type } : { name: pid, type: "Unknown" };
-    };
-
-    const totalSystems = processors.length;
-    const foundInSystems = processors.filter(p => user_email in p.records).length;
+    const isPartial = requestData.status === "processing";
 
     // 3. Return different data based on the request type
     if (request_type === "access") {
@@ -56,7 +49,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ tok
           type: p.type,
           data: p.records[user_email],
         }));
-      return NextResponse.json({ type: "access", results });
+      return NextResponse.json({ type: "access", results, isPartial });
     }
 
     if (request_type === "erasure") {
@@ -82,7 +75,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ tok
         });
 
       const actionedSystems = results.filter(r => r.timestamp !== null).length;
-      return NextResponse.json({ type: "erasure", results, totalSystems: results.length, actionedSystems });
+      return NextResponse.json({ type: "erasure", results, totalSystems: results.length, actionedSystems, isPartial });
     }
 
     if (request_type === "correction") {
@@ -108,7 +101,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ tok
         });
 
       const actionedSystems = results.filter(r => r.timestamp !== null).length;
-      return NextResponse.json({ type: "modify", results, totalSystems: results.length, actionedSystems });
+      return NextResponse.json({ type: "modify", results, totalSystems: results.length, actionedSystems, isPartial });
     }
 
     // Fallback for other types

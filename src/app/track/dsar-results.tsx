@@ -18,6 +18,7 @@ type ResultData = {
   totalSystems?: number;
   foundInSystems?: number;
   actionedSystems?: number;
+  isPartial?: boolean;
 };
 
 function renderValue(value: unknown, depth = 0): React.ReactNode {
@@ -81,7 +82,7 @@ export function DsarResults({ token, status }: { token: string; status: string }
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (status !== "completed") {
+    if (status !== "completed" && status !== "processing") {
       setIsLoading(false);
       return;
     }
@@ -102,21 +103,49 @@ export function DsarResults({ token, status }: { token: string; status: string }
     fetchResults();
   }, [token, status]);
 
-  if (status !== "completed") return null;
+  if (status !== "completed" && status !== "processing") return null;
 
   return (
     <Card className="mt-8 overflow-hidden border-blue-100 shadow-sm">
       <CardHeader className="bg-blue-50/50 pb-6 border-b border-blue-100">
-        <CardTitle className="text-xl text-blue-900">Request Results</CardTitle>
-        <CardDescription className="text-blue-700/80">
-          {data?.type === "access" 
-            ? "Your personal data retrieved from our integrated processing systems."
-            : data?.type === "erasure"
-            ? "Proof of deletion from our integrated processing systems."
-            : data?.type === "modify"
-            ? "Proof of modification across our integrated processing systems."
-            : "Review the outcome of your request."}
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="text-xl text-blue-900">Request Results</CardTitle>
+            <CardDescription className="text-blue-700/80">
+              {data?.type === "access"
+                ? "Your personal data retrieved from our integrated processing systems."
+                : data?.type === "erasure"
+                ? "Proof of deletion from our integrated processing systems."
+                : data?.type === "modify"
+                ? "Proof of modification across our integrated processing systems."
+                : "Review the outcome of your request."}
+            </CardDescription>
+          </div>
+          {data?.isPartial && (
+            <span className="text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200 animate-pulse whitespace-nowrap">
+              ⏳ In Progress
+            </span>
+          )}
+        </div>
+        {/* Overall % progress bar — shown for erasure/correction */}
+        {data?.isPartial && data.totalSystems !== undefined && (
+          <div className="mt-4">
+            <div className="flex items-center justify-between mb-1.5">
+              <p className="text-xs font-semibold text-amber-700">
+                {data.actionedSystems || 0} of {data.totalSystems} processors actioned
+              </p>
+              <p className="text-xs font-bold text-amber-700">
+                {Math.round(((data.actionedSystems || 0) / (data.totalSystems || 1)) * 100)}% complete
+              </p>
+            </div>
+            <div className="h-2.5 w-full bg-gray-200 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-amber-400 rounded-full transition-all duration-700"
+                style={{ width: `${Math.round(((data.actionedSystems || 0) / (data.totalSystems || 1)) * 100)}%` }}
+              />
+            </div>
+          </div>
+        )}
       </CardHeader>
       
       <CardContent className="pt-6">

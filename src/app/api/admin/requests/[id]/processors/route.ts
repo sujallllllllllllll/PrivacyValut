@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
 import { readFileSync } from "fs";
 import { join } from "path";
+import { generateAndSaveStatusNote } from "@/lib/status-note";
 
 export async function GET(
   _req: NextRequest,
@@ -18,7 +19,7 @@ export async function GET(
     const { id } = await params;
     const { data: req, error } = await supabase
       .from("dsar_requests")
-      .select("request_type, user_email")
+      .select("request_type, user_email, status")
       .eq("id", id)
       .single();
 
@@ -67,6 +68,25 @@ export async function GET(
         data: found ? processor.records[citizenEmail] : null,
       };
     });
+
+    // Auto-advance status based on request type and current status
+    if (req.status === "under_review" || req.status === "submitted") {
+      if (requestType === "access") {
+        // Access = just viewing data, fetching IS the action → complete immediately
+        await supabase
+          .from("dsar_requests")
+          .update({ status: "completed", completed_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+          .eq("id", id);
+        generateAndSaveStatusNote(supabase, id, req.user_email, requestType, req.status, "completed").catch(() => {});
+      } else {
+        // erasure / correction → move to processing, admin still needs to action processors
+        await supabase
+          .from("dsar_requests")
+          .update({ status: "processing", updated_at: new Date().toISOString() })
+          .eq("id", id);
+        generateAndSaveStatusNote(supabase, id, req.user_email, requestType, req.status, "processing").catch(() => {});
+      }
+    }
 
     return NextResponse.json({ processors: results });
   } catch (err) {

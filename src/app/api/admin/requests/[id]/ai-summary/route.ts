@@ -28,27 +28,24 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     let recommendedAction = "";
 
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": process.env.ANTHROPIC_API_KEY || "",
-          "anthropic-version": "2023-06-01",
-        },
-        body: JSON.stringify({
-          model: "claude-3-haiku-20240307",
-          max_tokens: 500,
-          system: "You are a Data Protection Officer assistant helping to process DPDP Act 2023 compliance requests in India.",
-          messages: [{
-            role: "user",
-            content: `DSAR Analysis:\n- Citizen: ${data.user_name}\n- Type: ${data.request_type.toUpperCase()} — ${typeDesc}\n- Status: ${data.status}\n- Days Remaining: ${daysRemaining ?? "Unknown"}${detailsText}\n\nProvide:\nSUMMARY: [2-3 sentence summary]\nRECOMMENDED ACTION: [specific action]`,
-          }],
-        }),
-      });
+      const geminiKey = process.env.GEMINI_API_KEY || "";
+      const prompt = `You are a Data Protection Officer assistant helping to process DPDP Act 2023 compliance requests in India.\n\nDSAR Analysis:\n- Citizen: ${data.user_name}\n- Type: ${data.request_type.toUpperCase()} — ${typeDesc}\n- Status: ${data.status}\n- Days Remaining: ${daysRemaining ?? "Unknown"}${detailsText}\n\nProvide:\nSUMMARY: [2-3 sentence summary]\nRECOMMENDED ACTION: [specific action]`;
+
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { maxOutputTokens: 500 },
+          }),
+        }
+      );
 
       if (res.ok) {
-        const aiData = (await res.json()) as { content?: Array<{ text?: string }> };
-        const text = aiData?.content?.[0]?.text || "";
+        const aiData = (await res.json()) as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
+        const text = aiData?.candidates?.[0]?.content?.parts?.[0]?.text || "";
         summary = text.match(/SUMMARY:\s*([\s\S]+?)(?=RECOMMENDED ACTION:|$)/)?.[1]?.trim() ?? text.trim();
         recommendedAction = text.match(/RECOMMENDED ACTION:\s*([\s\S]+?)$/)?.[1]?.trim() ?? "Review and process within the legal deadline.";
       } else {
