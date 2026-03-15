@@ -11,9 +11,27 @@
         "upi_id": "priya.sharma@okicici",
         "linked_bank": "ICICI Bank, Pune Branch",
         "transactions": [
-          { "id": "TXN-20240101", "amount": "₹4,500", "merchant": "BigBasket", "date": "2024-01-01", "status": "success" },
-          { "id": "TXN-20240215", "amount": "₹12,000", "merchant": "Myntra", "date": "2024-02-15", "status": "success" },
-          { "id": "TXN-20240310", "amount": "₹850", "merchant": "Swiggy", "date": "2024-03-10", "status": "refunded" }
+          {
+            "id": "TXN-20240101",
+            "amount": "₹4,500",
+            "merchant": "BigBasket",
+            "date": "2024-01-01",
+            "status": "success"
+          },
+          {
+            "id": "TXN-20240215",
+            "amount": "₹12,000",
+            "merchant": "Myntra",
+            "date": "2024-02-15",
+            "status": "success"
+          },
+          {
+            "id": "TXN-20240310",
+            "amount": "₹850",
+            "merchant": "Swiggy",
+            "date": "2024-03-10",
+            "status": "refunded"
+          }
         ],
         "kyc_status": "verified",
         "registered_on": "2022-08-14"
@@ -25,8 +43,20 @@
         "upi_id": "arjun.mehta@oksbi",
         "linked_bank": "State Bank of India, Mumbai Branch",
         "transactions": [
-          { "id": "TXN-20240205", "amount": "₹2,300", "merchant": "Amazon", "date": "2024-02-05", "status": "success" },
-          { "id": "TXN-20240320", "amount": "₹7,600", "merchant": "Flipkart", "date": "2024-03-20", "status": "success" }
+          {
+            "id": "TXN-20240205",
+            "amount": "₹2,300",
+            "merchant": "Amazon",
+            "date": "2024-02-05",
+            "status": "success"
+          },
+          {
+            "id": "TXN-20240320",
+            "amount": "₹7,600",
+            "merchant": "Flipkart",
+            "date": "2024-03-20",
+            "status": "success"
+          }
         ],
         "kyc_status": "verified",
         "registered_on": "2021-11-03"
@@ -38,7 +68,13 @@
         "upi_id": "neha.kulkarni@okhdfcbank",
         "linked_bank": "HDFC Bank, Nashik Branch",
         "transactions": [
-          { "id": "TXN-20240112", "amount": "₹15,000", "merchant": "Apple Store", "date": "2024-01-12", "status": "success" }
+          {
+            "id": "TXN-20240112",
+            "amount": "₹15,000",
+            "merchant": "Apple Store",
+            "date": "2024-01-12",
+            "status": "success"
+          }
         ],
         "kyc_status": "pending",
         "registered_on": "2023-03-22"
@@ -50,8 +86,20 @@
         "upi_id": "rahul.desai@okaxis",
         "linked_bank": "Axis Bank, Nagpur Branch",
         "transactions": [
-          { "id": "TXN-20240418", "amount": "₹3,200", "merchant": "Zomato", "date": "2024-04-18", "status": "success" },
-          { "id": "TXN-20240501", "amount": "₹9,999", "merchant": "Nykaa", "date": "2024-05-01", "status": "success" }
+          {
+            "id": "TXN-20240418",
+            "amount": "₹3,200",
+            "merchant": "Zomato",
+            "date": "2024-04-18",
+            "status": "success"
+          },
+          {
+            "id": "TXN-20240501",
+            "amount": "₹9,999",
+            "merchant": "Nykaa",
+            "date": "2024-05-01",
+            "status": "success"
+          }
         ],
         "kyc_status": "verified",
         "registered_on": "2023-07-10"
@@ -75,21 +123,11 @@
         "last_contact": "2024-03-18",
         "assigned_rep": "Vikram Iyer",
         "notes": "Interested in enterprise plan. Follow up after Q1 board meeting.",
-        "tags": ["enterprise", "hot-lead", "Maharashtra"]
-      },
-      "priya.sharma@gmail.com": {
-        "crm_id": "CRM-2024-00204",
-        "full_name": "Priya Sharma",
-        "email": "priya.sharma@gmail.com",
-        "phone": "+91 98765 43210",
-        "address": "Plot 12, Baner Road, Baner, Pune, Maharashtra 411045",
-        "lead_source": "Inbound Website Form",
-        "deal_stage": "Closed Won",
-        "deal_value": "₹1,20,000",
-        "last_contact": "2024-01-29",
-        "assigned_rep": "Sneha Patil",
-        "notes": "Purchased annual subscription. Onboarding scheduled.",
-        "tags": ["SMB", "closed-won"]
+        "tags": [
+          "enterprise",
+          "hot-lead",
+          "Maharashtra"
+        ]
       },
       "siddharth.rao@gmail.com": {
         "crm_id": "CRM-2024-00512",
@@ -103,7 +141,10 @@
         "last_contact": "2024-04-10",
         "assigned_rep": "Vikram Iyer",
         "notes": "Requires custom SLA terms. Legal review in progress.",
-        "tags": ["enterprise", "legal-review"]
+        "tags": [
+          "enterprise",
+          "legal-review"
+        ]
       }
     }
   },
@@ -183,28 +224,16 @@
     "name": "TargetPulse",
     "type": "Marketing Platform",
     "records": {
-      "priya.sharma@gmail.com": {
-        "contact_id": "TP-C-88201",
-        "full_name": "Priya Sharma",
-        "email": "priya.sharma@gmail.com",
-        "phone": "+91 98765 43210",
-        "segments": ["Women 25-35", "Home & Lifestyle", "Festive Shoppers 2023"],
-        "email_consent": true,
-        "sms_consent": true,
-        "whatsapp_consent": false,
-        "last_campaign_opened": "Diwali Mega Sale – Oct 2023",
-        "open_rate": "68%",
-        "click_rate": "24%",
-        "unsubscribed": false,
-        "city": "Pune",
-        "language": "Marathi"
-      },
       "siddharth.rao@gmail.com": {
         "contact_id": "TP-C-91045",
         "full_name": "Siddharth Rao",
         "email": "siddharth.rao@gmail.com",
         "phone": "+91 99887 76655",
-        "segments": ["Men 30-40", "Tech Enthusiasts", "Premium Products"],
+        "segments": [
+          "Men 30-40",
+          "Tech Enthusiasts",
+          "Premium Products"
+        ],
         "email_consent": true,
         "sms_consent": false,
         "whatsapp_consent": true,
@@ -220,7 +249,10 @@
         "full_name": "Kavita Pawar",
         "email": "kavita.pawar@gmail.com",
         "phone": "+91 93456 78901",
-        "segments": ["Women 35-50", "Health & Wellness"],
+        "segments": [
+          "Women 35-50",
+          "Health & Wellness"
+        ],
         "email_consent": false,
         "sms_consent": true,
         "whatsapp_consent": true,
@@ -238,32 +270,15 @@
     "name": "QuickDeliver",
     "type": "Delivery Partner",
     "records": {
-      "rahul.desai@protonmail.com": {
-        "customer_id": "QD-NGP-3312",
-        "full_name": "Rahul Desai",
-        "phone": "+91 70000 11223",
-        "saved_addresses": [
-          { "label": "Home", "address": "B-12, Laxmi Nagar, Nagpur, Maharashtra 440022" },
-          { "label": "Office", "address": "3rd Floor, Plot 5, IT Park, Nagpur, Maharashtra 440013" }
-        ],
-        "total_deliveries": 47,
-        "last_delivery": {
-          "order_id": "QD-ORD-20240402",
-          "from": "Pizza Express, Dharampeth",
-          "to": "B-12, Laxmi Nagar, Nagpur",
-          "date": "2024-04-02",
-          "status": "Delivered",
-          "amount_paid": "₹320"
-        },
-        "preferred_payment": "UPI",
-        "member_since": "2021-10-10"
-      },
       "neha.kulkarni@yahoo.co.in": {
         "customer_id": "QD-PUN-7891",
         "full_name": "Neha Kulkarni",
         "phone": "+91 87654 32109",
         "saved_addresses": [
-          { "label": "Home", "address": "Flat 8, Greenwood Society, Nashik Road, Nashik, Maharashtra 422101" }
+          {
+            "label": "Home",
+            "address": "Flat 8, Greenwood Society, Nashik Road, Nashik, Maharashtra 422101"
+          }
         ],
         "total_deliveries": 23,
         "last_delivery": {
@@ -282,7 +297,10 @@
         "full_name": "Suresh Joshi",
         "phone": "+91 82345 67890",
         "saved_addresses": [
-          { "label": "Home", "address": "C-4, Shanti CHS, Ghodbunder Road, Thane West, Maharashtra 400615" }
+          {
+            "label": "Home",
+            "address": "C-4, Shanti CHS, Ghodbunder Road, Thane West, Maharashtra 400615"
+          }
         ],
         "total_deliveries": 11,
         "last_delivery": {
@@ -310,15 +328,28 @@
         "last_seen": "2024-04-15",
         "total_sessions": 312,
         "avg_session_duration": "7m 24s",
-        "most_visited_pages": ["/offers", "/checkout", "/account/settings"],
+        "most_visited_pages": [
+          "/offers",
+          "/checkout",
+          "/account/settings"
+        ],
         "device": "iPhone 14, iOS 17.3",
         "browser": "Safari 17",
         "ip_country": "India",
         "ip_city": "Pune",
         "events": [
-          { "event": "purchase_completed", "count": 18 },
-          { "event": "wishlist_add", "count": 54 },
-          { "event": "search", "count": 201 }
+          {
+            "event": "purchase_completed",
+            "count": 18
+          },
+          {
+            "event": "wishlist_add",
+            "count": 54
+          },
+          {
+            "event": "search",
+            "count": 201
+          }
         ]
       },
       "siddharth.rao@gmail.com": {
@@ -328,33 +359,28 @@
         "last_seen": "2024-04-20",
         "total_sessions": 528,
         "avg_session_duration": "12m 10s",
-        "most_visited_pages": ["/electronics", "/compare", "/blog"],
+        "most_visited_pages": [
+          "/electronics",
+          "/compare",
+          "/blog"
+        ],
         "device": "Samsung Galaxy S23, Android 14",
         "browser": "Chrome 123",
         "ip_country": "India",
         "ip_city": "Pune",
         "events": [
-          { "event": "purchase_completed", "count": 32 },
-          { "event": "product_view", "count": 410 },
-          { "event": "review_submitted", "count": 9 }
-        ]
-      },
-      "rahul.desai@protonmail.com": {
-        "user_id": "IM-U-33B8D7",
-        "email": "rahul.desai@protonmail.com",
-        "first_seen": "2023-07-15",
-        "last_seen": "2024-03-30",
-        "total_sessions": 98,
-        "avg_session_duration": "4m 55s",
-        "most_visited_pages": ["/home", "/categories", "/cart"],
-        "device": "OnePlus 11, Android 13",
-        "browser": "Firefox 124",
-        "ip_country": "India",
-        "ip_city": "Nagpur",
-        "events": [
-          { "event": "purchase_completed", "count": 7 },
-          { "event": "cart_add", "count": 30 },
-          { "event": "search", "count": 65 }
+          {
+            "event": "purchase_completed",
+            "count": 32
+          },
+          {
+            "event": "product_view",
+            "count": 410
+          },
+          {
+            "event": "review_submitted",
+            "count": 9
+          }
         ]
       },
       "kavita.pawar@gmail.com": {
@@ -364,14 +390,23 @@
         "last_seen": "2024-02-18",
         "total_sessions": 44,
         "avg_session_duration": "3m 02s",
-        "most_visited_pages": ["/health", "/orders"],
+        "most_visited_pages": [
+          "/health",
+          "/orders"
+        ],
         "device": "Redmi Note 12, Android 12",
         "browser": "Chrome 120",
         "ip_country": "India",
         "ip_city": "Nashik",
         "events": [
-          { "event": "purchase_completed", "count": 3 },
-          { "event": "product_view", "count": 89 }
+          {
+            "event": "purchase_completed",
+            "count": 3
+          },
+          {
+            "event": "product_view",
+            "count": 89
+          }
         ]
       }
     }

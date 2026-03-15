@@ -10,13 +10,16 @@ type ProcessorRecord = {
   type: string;
   found: boolean;
   data: Record<string, unknown> | null;
+  deleted?: boolean;
+  modified?: boolean;
 };
 
 type ProcessorState = ProcessorRecord & {
-  status: "pending" | "loading" | "done";
+  status: "pending" | "loading" | "done" | "actioning";
   selected: boolean;
   deleted: boolean;
   modified: boolean;
+  corrections: Record<string, string>;
 };
 
 // ---------- helpers ----------
@@ -36,7 +39,6 @@ function renderValue(value: unknown, depth = 0): React.ReactNode {
   }
   if (Array.isArray(value)) {
     if (value.length === 0) return <span className="text-gray-400">None</span>;
-    // Array of primitives → comma-joined chips
     if (typeof value[0] !== "object") {
       return (
         <div className="flex flex-wrap gap-1 mt-0.5">
@@ -48,7 +50,6 @@ function renderValue(value: unknown, depth = 0): React.ReactNode {
         </div>
       );
     }
-    // Array of objects → nested list
     return (
       <div className="space-y-2 mt-1">
         {value.map((item, i) => (
@@ -77,10 +78,10 @@ function renderValue(value: unknown, depth = 0): React.ReactNode {
   return null;
 }
 
-// ---------- icons (inline SVG to avoid extra deps) ----------
-function Spinner() {
+// ---------- icons ----------
+function Spinner({ color = "text-blue-500" }: { color?: string }) {
   return (
-    <svg className="animate-spin h-4 w-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+    <svg className={`animate-spin h-4 w-4 ${color}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
     </svg>
@@ -114,13 +115,12 @@ type Props = {
 export function ProcessorPropagation({ requestId, requestType, userEmail, userName }: Props) {
   const [processorStates, setProcessorStates] = useState<ProcessorState[]>([]);
   const [phase, setPhase] = useState<"idle" | "fetching" | "done">("idle");
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isModifying, setIsModifying] = useState(false);
+  const [isActioning, setIsActioning] = useState(false);
   const [actionError, setActionError] = useState("");
   const [isPdfLoading, setIsPdfLoading] = useState(false);
 
   const isErasure = requestType === "erasure";
-  const isModify = requestType === "modify";
+  const isModify = requestType === "correction";
   const isActionable = isErasure || isModify;
   const anySelected = processorStates.some((p) => p.selected && !p.deleted && !p.modified);
   const allDone = processorStates.length > 0 && processorStates.every((p) => p.status === "done");
@@ -131,33 +131,23 @@ export function ProcessorPropagation({ requestId, requestType, userEmail, userNa
     setActionError("");
 
     const res = await fetch(`/api/admin/requests/${requestId}/processors`);
-    if (!res.ok) {
-      setPhase("idle");
-      return;
-    }
+    if (!res.ok) { setPhase("idle"); return; }
     const { processors }: { processors: ProcessorRecord[] } = await res.json();
 
-    // Initialize all as pending
     const initial: ProcessorState[] = processors.map((p) => ({
       ...p,
       status: "pending",
       selected: false,
-      deleted: (p as any).deleted || false,
-      modified: (p as any).modified || false,
+      deleted: p.deleted || false,
+      modified: p.modified || false,
+      corrections: {},
     }));
     setProcessorStates(initial);
 
-    // Stagger each processor sequentially
     for (let i = 0; i < processors.length; i++) {
-      // Mark this one as loading
-      setProcessorStates((prev) =>
-        prev.map((p, idx) => (idx === i ? { ...p, status: "loading" } : p))
-      );
+      setProcessorStates((prev) => prev.map((p, idx) => idx === i ? { ...p, status: "loading" } : p));
       await delay(randomBetween(400, 700));
-      // Mark as done with actual data
-      setProcessorStates((prev) =>
-        prev.map((p, idx) => (idx === i ? { ...p, ...processors[i], status: "done" } : p))
-      );
+      setProcessorStates((prev) => prev.map((p, idx) => idx === i ? { ...p, ...processors[i], status: "done", corrections: {} } : p));
     }
 
     setPhase("done");
@@ -166,23 +156,39 @@ export function ProcessorPropagation({ requestId, requestType, userEmail, userNa
   async function handleAction() {
     const toAction = processorStates.filter((p) => p.selected && !p.deleted && !p.modified && p.found);
     if (toAction.length === 0) return;
-    
-    if (isErasure) setIsDeleting(true);
-    if (isModify) setIsModifying(true);
+
+    setIsActioning(true);
     setActionError("");
 
+    // Mark selected cards as actioning for visual feedback
+    setProcessorStates((prev) =>
+      prev.map((p) => toAction.some((t) => t.processorId === p.processorId) ? { ...p, status: "actioning" } : p)
+    );
+
     const actionEndpoint = isErasure ? "delete" : "modify";
+    const corrections = isModify
+      ? Object.fromEntries(
+          toAction.map((p) => [
+            p.processorId,
+            // Only include fields where admin actually typed a new value
+            Object.fromEntries(
+              Object.entries(p.corrections).filter(([, v]) => v.trim() !== "")
+            ),
+          ])
+        )
+      : undefined;
+
     const res = await fetch(`/api/admin/requests/${requestId}/processors/${actionEndpoint}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ processorIds: toAction.map((p) => p.processorId) }),
+      body: JSON.stringify({ processorIds: toAction.map((p) => p.processorId), corrections }),
     });
 
     const data = await res.json();
     if (!res.ok) {
       setActionError(data.message || `${isErasure ? "Deletion" : "Modification"} failed.`);
-      setIsDeleting(false);
-      setIsModifying(false);
+      setProcessorStates((prev) => prev.map((p) => p.status === "actioning" ? { ...p, status: "done" } : p));
+      setIsActioning(false);
       return;
     }
 
@@ -192,14 +198,15 @@ export function ProcessorPropagation({ requestId, requestType, userEmail, userNa
         if (!actionedSet.has(p.processorId)) return p;
         return {
           ...p,
+          status: "done",
           deleted: isErasure ? true : p.deleted,
           modified: isModify ? true : p.modified,
+          data: isErasure ? null : p.data,
           selected: false,
         };
       })
     );
-    setIsDeleting(false);
-    setIsModifying(false);
+    setIsActioning(false);
   }
 
   async function handleDownloadPdf() {
@@ -213,7 +220,6 @@ export function ProcessorPropagation({ requestId, requestType, userEmail, userNa
       const margin = 15;
       let y = margin;
 
-      // Header
       doc.setFontSize(18);
       doc.setFont("helvetica", "bold");
       doc.setTextColor(30, 58, 138);
@@ -226,7 +232,6 @@ export function ProcessorPropagation({ requestId, requestType, userEmail, userNa
       doc.text(`Generated: ${new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })} IST`, margin, y);
       y += 10;
 
-      // Citizen details
       doc.setFontSize(11);
       doc.setFont("helvetica", "bold");
       doc.setTextColor(0, 0, 0);
@@ -251,18 +256,10 @@ export function ProcessorPropagation({ requestId, requestType, userEmail, userNa
 
       y = (doc as InstanceType<typeof jsPDF> & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
 
-      // Processor results
       doc.setFontSize(11);
       doc.setFont("helvetica", "bold");
       doc.text("Processor Fetch Results", margin, y);
       y += 6;
-
-      const tableBody = processorStates.map((p) => [
-        p.processorName,
-        p.type,
-        p.found ? "Found" : "Not Found",
-        p.deleted ? "Deleted" : p.modified ? "Modified" : p.found ? "Retained" : "N/A",
-      ]);
 
       autoTable(doc, {
         startY: y,
@@ -270,13 +267,17 @@ export function ProcessorPropagation({ requestId, requestType, userEmail, userNa
         styles: { fontSize: 9, cellPadding: 3 },
         headStyles: { fillColor: [30, 58, 138], textColor: 255, fontStyle: "bold" },
         head: [["Processor", "Type", "Data Status", "Action Taken"]],
-        body: tableBody,
+        body: processorStates.map((p) => [
+          p.processorName,
+          p.type,
+          p.found ? "Found" : "Not Found",
+          p.deleted ? "Deleted" : p.modified ? "Modified" : p.found ? "Retained" : "N/A",
+        ]),
         margin: { left: margin, right: margin },
       });
 
       y = (doc as InstanceType<typeof jsPDF> & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
 
-      // Action summary
       const actionedProcessors = processorStates.filter((p) => p.deleted || p.modified);
       if (actionedProcessors.length > 0) {
         if (y > 250) { doc.addPage(); y = margin; }
@@ -290,11 +291,8 @@ export function ProcessorPropagation({ requestId, requestType, userEmail, userNa
           startY: y,
           theme: "grid",
           styles: { fontSize: 9, cellPadding: 3 },
-          headStyles: { 
-            fillColor: isErasure ? [185, 28, 28] : [217, 119, 6], 
-            textColor: 255, fontStyle: "bold" 
-          },
-          head: [["Processor", "Type", `Action Logged At`]],
+          headStyles: { fillColor: isErasure ? [185, 28, 28] : [217, 119, 6], textColor: 255, fontStyle: "bold" },
+          head: [["Processor", "Type", "Action Logged At"]],
           body: actionedProcessors.map((p) => [
             p.processorName,
             p.type,
@@ -304,7 +302,6 @@ export function ProcessorPropagation({ requestId, requestType, userEmail, userNa
         });
       }
 
-      // Footer
       const totalPages = doc.getNumberOfPages();
       for (let i = 1; i <= totalPages; i++) {
         doc.setPage(i);
@@ -337,22 +334,11 @@ export function ProcessorPropagation({ requestId, requestType, userEmail, userNa
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           {allDone && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDownloadPdf}
-              disabled={isPdfLoading}
-              className="text-xs"
-            >
+            <Button variant="outline" size="sm" onClick={handleDownloadPdf} disabled={isPdfLoading} className="text-xs">
               {isPdfLoading ? "Generating..." : "⬇ Download PDF Report"}
             </Button>
           )}
-          <Button
-            size="sm"
-            onClick={handleFetch}
-            disabled={phase === "fetching"}
-            className="text-xs"
-          >
+          <Button size="sm" onClick={handleFetch} disabled={phase === "fetching"} className="text-xs">
             {phase === "fetching" ? "Fetching..." : phase === "done" ? "Refresh" : "Fetch Data from All Processors"}
           </Button>
         </div>
@@ -375,9 +361,14 @@ export function ProcessorPropagation({ requestId, requestType, userEmail, userNa
                 isModify={isModify}
                 onToggle={() =>
                   setProcessorStates((prev) =>
+                    prev.map((x) => x.processorId === p.processorId ? { ...x, selected: !x.selected } : x)
+                  )
+                }
+                onCorrectionChange={(field, value) =>
+                  setProcessorStates((prev) =>
                     prev.map((x) =>
                       x.processorId === p.processorId
-                        ? { ...x, selected: !x.selected }
+                        ? { ...x, corrections: { ...x.corrections, [field]: value } }
                         : x
                     )
                   )
@@ -387,27 +378,25 @@ export function ProcessorPropagation({ requestId, requestType, userEmail, userNa
           </div>
         )}
 
-        {/* Action bar (Erasure / Modify) */}
+        {/* Action bar */}
         {allDone && isActionable && (
           <div className="mt-4 pt-4 border-t border-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <p className="text-sm text-muted-foreground">
-              {processorStates.filter((p) => p.selected).length} processor(s) selected for {isErasure ? "erasure" : "modification"}
+              {processorStates.filter((p) => p.selected).length} processor(s) selected for {isErasure ? "erasure" : "correction"}
             </p>
             <div className="flex items-center gap-3">
-              {actionError && (
-                <p className="text-xs text-destructive">{actionError}</p>
-              )}
+              {actionError && <p className="text-xs text-destructive">{actionError}</p>}
               <Button
                 size="sm"
                 variant={isErasure ? "destructive" : "default"}
                 onClick={handleAction}
-                disabled={!anySelected || isDeleting || isModifying}
+                disabled={!anySelected || isActioning}
                 className="flex items-center gap-1.5"
               >
                 {isErasure && <TrashIcon />}
                 {isErasure
-                  ? isDeleting ? "Deleting..." : "Delete Selected"
-                  : isModifying ? "Marking..." : "Mark as Modified"}
+                  ? isActioning ? "Deleting..." : "Delete Selected"
+                  : isActioning ? "Updating..." : "Apply Corrections"}
               </Button>
             </div>
           </div>
@@ -417,45 +406,49 @@ export function ProcessorPropagation({ requestId, requestType, userEmail, userNa
   );
 }
 
-// ---------- sub-component: single processor card ----------
+// ---------- sub-component ----------
 type ProcessorCardProps = {
   processor: ProcessorState;
   isErasure: boolean;
   isModify: boolean;
   onToggle: () => void;
+  onCorrectionChange: (field: string, value: string) => void;
 };
 
-function ProcessorCard({ processor: p, isErasure, isModify, onToggle }: ProcessorCardProps) {
+function ProcessorCard({ processor: p, isErasure, isModify, onToggle, onCorrectionChange }: ProcessorCardProps) {
+  const isPending = p.status === "pending";
   const isLoading = p.status === "loading";
   const isDone = p.status === "done";
-  const isPending = p.status === "pending";
-  
+  const isActioning = p.status === "actioning";
   const isActionable = isErasure || isModify;
 
   return (
     <div
       className={`relative border rounded-lg p-3 transition-all duration-300 ${
-        p.deleted
-          ? "border-red-200 bg-red-50/40 opacity-75"
+        isActioning
+          ? isErasure
+            ? "border-red-300 bg-red-50/50 animate-pulse"
+            : "border-amber-300 bg-amber-50/50 animate-pulse"
+          : p.deleted
+          ? "border-red-200 bg-red-50/30 opacity-80"
           : p.modified
-          ? "border-amber-200 bg-amber-50/40 opacity-75"
+          ? "border-amber-200 bg-amber-50/30 opacity-80"
           : p.found && isDone
           ? "border-green-100 bg-green-50/20"
           : "border-border bg-background"
       }`}
     >
-      {/* Card header row */}
+      {/* Header row */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2 min-w-0">
-          {/* Status indicator */}
           <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center">
             {isPending && <span className="w-2 h-2 rounded-full bg-gray-300 inline-block" />}
             {isLoading && <Spinner />}
+            {isActioning && <Spinner color={isErasure ? "text-red-500" : "text-amber-500"} />}
             {isDone && <CheckIcon />}
           </div>
-
           <div className="min-w-0">
-            <p className={`text-sm font-semibold truncate ${p.deleted ? "line-through text-red-600" : ""}`}>
+            <p className={`text-sm font-semibold truncate ${p.deleted ? "line-through text-red-500" : ""}`}>
               {p.processorName}
             </p>
             <p className="text-[10px] text-muted-foreground uppercase tracking-wide">{p.type}</p>
@@ -463,14 +456,21 @@ function ProcessorCard({ processor: p, isErasure, isModify, onToggle }: Processo
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
-          {p.deleted && (
+          {isActioning && (
+            <span className={`text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded border ${
+              isErasure ? "text-red-600 border-red-200 bg-red-50" : "text-amber-700 border-amber-200 bg-amber-50"
+            }`}>
+              {isErasure ? "Deleting..." : "Updating..."}
+            </span>
+          )}
+          {!isActioning && p.deleted && (
             <span className="text-[10px] font-bold uppercase tracking-wide text-red-600 border border-red-200 bg-red-50 px-1.5 py-0.5 rounded">
               Deleted
             </span>
           )}
-          {p.modified && (
+          {!isActioning && p.modified && (
             <span className="text-[10px] font-bold uppercase tracking-wide text-amber-700 border border-amber-200 bg-amber-50 px-1.5 py-0.5 rounded">
-              Modified
+              Updated
             </span>
           )}
           {isDone && p.found && !p.deleted && !p.modified && (
@@ -483,22 +483,62 @@ function ProcessorCard({ processor: p, isErasure, isModify, onToggle }: Processo
               No Records
             </span>
           )}
-          {/* Action checkbox */}
           {isActionable && isDone && p.found && !p.deleted && !p.modified && (
             <input
               type="checkbox"
               checked={p.selected}
               onChange={onToggle}
-              className={`w-3.5 h-3.5 cursor-pointer flex-shrink-0 ${isErasure ? "accent-red-600" : "accent-blue-600"}`}
-              title={`Select for ${isErasure ? "erasure" : "modification"}`}
+              className={`w-3.5 h-3.5 cursor-pointer flex-shrink-0 ${isErasure ? "accent-red-600" : "accent-amber-600"}`}
+              title={`Select for ${isErasure ? "erasure" : "correction"}`}
             />
           )}
         </div>
       </div>
 
+      {/* Actioning message */}
+      {isActioning && (
+        <p className={`text-xs mt-1 pl-7 font-medium ${isErasure ? "text-red-600" : "text-amber-700"}`}>
+          {isErasure ? "Permanently removing data from this processor…" : "Applying corrections to this processor…"}
+        </p>
+      )}
+
+      {/* Deleted state */}
+      {isDone && p.deleted && (
+        <div className="mt-2 pt-2 border-t border-red-100">
+          <p className="text-xs text-red-500 italic">Data has been permanently removed from this processor.</p>
+        </div>
+      )}
+
       {/* Data content */}
-      {isDone && p.found && p.data && (
-        <div className={`mt-2 pt-2 border-t border-gray-100 ${(p.deleted || p.modified) ? "opacity-50 pointer-events-none" : ""}`}>
+      {(isDone || isActioning) && p.found && p.data && !p.deleted && (
+        <div className={`mt-2 pt-2 border-t border-gray-100 ${isActioning || p.modified ? "opacity-50 pointer-events-none" : ""}`}>
+          {/* Correction inputs — shown only when selected for modify */}
+          {isModify && isDone && p.selected && !p.modified && (
+            <div className="mb-3 space-y-1.5">
+              <p className="text-[10px] font-semibold text-amber-700 uppercase tracking-wide mb-1">Enter corrections (leave blank to keep):</p>
+              {([
+                { key: "full_name", label: "Full Name" },
+                { key: "email",     label: "Email" },
+                { key: "phone",     label: "Phone" },
+                { key: "address",   label: "Address" },
+                { key: "location",  label: "Location" },
+                { key: "city",      label: "City" },
+              ] as const)
+                .filter(({ key }) => key in (p.data as Record<string, unknown>))
+                .map(({ key, label }) => (
+                  <div key={key} className="grid grid-cols-[40%_60%] gap-x-2 items-center text-xs">
+                    <span className="text-gray-500 font-medium">{label}</span>
+                    <input
+                      type="text"
+                      placeholder={String((p.data as Record<string, unknown>)[key])}
+                      value={p.corrections[key] ?? ""}
+                      onChange={(e) => onCorrectionChange(key, e.target.value)}
+                      className="border border-amber-200 rounded px-1.5 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-amber-400 bg-white"
+                    />
+                  </div>
+                ))}
+            </div>
+          )}
           <div className="max-h-48 overflow-y-auto pr-1">
             {renderValue(p.data)}
           </div>

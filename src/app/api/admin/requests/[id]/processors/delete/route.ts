@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
+import { readFileSync, writeFileSync } from "fs";
+import { join } from "path";
 
 export async function POST(
   req: NextRequest,
@@ -18,12 +20,37 @@ export async function POST(
     const processorIds: string[] = body.processorIds ?? [];
 
     if (!Array.isArray(processorIds) || processorIds.length === 0) {
-      return NextResponse.json(
-        { message: "No processor IDs provided" },
-        { status: 400 }
-      );
+      return NextResponse.json({ message: "No processor IDs provided" }, { status: 400 });
     }
 
+    // Get user email for this request
+    const { data: reqData } = await supabase
+      .from("dsar_requests")
+      .select("user_email")
+      .eq("id", id)
+      .single();
+
+    if (!reqData?.user_email) {
+      return NextResponse.json({ message: "Request not found" }, { status: 404 });
+    }
+
+    const userEmail = reqData.user_email as string;
+    const filePath = join(process.cwd(), "data", "processors.json");
+    const processors: Array<{ id: string; name: string; type: string; records: Record<string, unknown> }> =
+      JSON.parse(readFileSync(filePath, "utf-8"));
+
+    const toDeleteSet = new Set(processorIds);
+
+    // Actually delete the user's record from each selected processor
+    for (const processor of processors) {
+      if (toDeleteSet.has(processor.id) && userEmail in processor.records) {
+        delete processor.records[userEmail];
+      }
+    }
+
+    writeFileSync(filePath, JSON.stringify(processors, null, 2), "utf-8");
+
+    // Log the deletion
     const rows = processorIds.map((processor) => ({
       request_id: id,
       processor,
@@ -31,60 +58,43 @@ export async function POST(
       deleted_at: new Date().toISOString(),
     }));
 
-    const { error } = await supabase
-      .from("processor_deletion_log")
-      .insert(rows);
-
+    const { error } = await supabase.from("processor_deletion_log").insert(rows);
     if (error) {
       console.error("Deletion log insert error:", error);
-      return NextResponse.json(
-        { message: "Failed to log deletion" },
-        { status: 500 }
-      );
+      return NextResponse.json({ message: "Failed to log deletion" }, { status: 500 });
     }
 
-    // Auto-complete logic
+    // Update status based on progress
     try {
-      const { data: reqData } = await supabase
-        .from("dsar_requests")
-        .select("user_email")
-        .eq("id", id)
-        .single();
+      const remainingCount = processors.filter((p) => userEmail in p.records).length;
+      const { data: logs } = await supabase
+        .from("processor_deletion_log")
+        .select("processor")
+        .eq("request_id", id);
 
-      if (reqData?.user_email) {
-        const { readFileSync } = await import("fs");
-        const { join } = await import("path");
-        const filePath = join(process.cwd(), "data", "processors.json");
-        const raw = readFileSync(filePath, "utf-8");
-        const processors: any[] = JSON.parse(raw);
-        
-        const applicableCount = processors.filter((p) => reqData.user_email in p.records).length;
+      const uniqueActioned = new Set((logs || []).map((l) => l.processor)).size;
+      const totalApplicable = remainingCount + uniqueActioned;
 
-        const { data: logs } = await supabase
-          .from("processor_deletion_log")
-          .select("processor")
-          .eq("request_id", id);
-
-        const uniqueActioned = new Set((logs || []).map((l) => l.processor)).size;
-
-        if (uniqueActioned >= applicableCount && applicableCount > 0) {
+      if (totalApplicable > 0) {
+        if (uniqueActioned >= totalApplicable) {
           await supabase
             .from("dsar_requests")
             .update({ status: "completed", completed_at: new Date().toISOString() })
+            .eq("id", id);
+        } else {
+          await supabase
+            .from("dsar_requests")
+            .update({ status: "processing" })
             .eq("id", id);
         }
       }
     } catch (autoErr) {
       console.error("Auto-complete error:", autoErr);
-      // Non-fatal, so we don't throw
     }
 
     return NextResponse.json({ success: true, deleted: processorIds });
   } catch (err) {
     console.error("Processor delete error:", err);
-    return NextResponse.json(
-      { message: "Failed to process deletion" },
-      { status: 500 }
-    );
+    return NextResponse.json({ message: "Failed to process deletion" }, { status: 500 });
   }
 }

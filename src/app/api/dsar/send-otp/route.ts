@@ -15,7 +15,6 @@ export async function POST(req: NextRequest) {
     }
 
     const { requestId, phone } = body.data;
-
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
@@ -38,8 +37,7 @@ export async function POST(req: NextRequest) {
       .eq("id", requestId);
 
     if (error) throw error;
-    
-    // Simulate sending SMS via Twilio in development
+
     console.log("----------------------------------------");
     console.log(`[SIMULATED SMS (Twilio) TO ${phone}]`);
     console.log(`Your PrivacyVault OTP is: ${otp}`);

@@ -52,3 +52,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: "Failed to submit request" }, { status: 500 });
   }
 }
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const { id, requestType, requestDetails } = await req.json();
+    if (!id || !requestType) {
+      return NextResponse.json({ message: "Missing id or requestType" }, { status: 400 });
+    }
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from("dsar_requests")
+      .update({ request_type: requestType, request_details: requestDetails ?? null })
+      .eq("id", id);
+    if (error) throw error;
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error("Patch DSAR error:", String(err).replace(/[\r\n]/g, " "));
+    return NextResponse.json({ message: "Failed to update request" }, { status: 500 });
+  }
+}

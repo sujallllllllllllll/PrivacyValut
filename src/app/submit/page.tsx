@@ -49,7 +49,6 @@ export default function SubmitPage() {
       setServerError("Please enter a valid phone number.");
       return;
     }
-    // Validate name and email are filled before sending OTP
     const valid = await form.trigger(["userName", "userEmail"]);
     if (!valid) return;
 
@@ -112,7 +111,7 @@ export default function SubmitPage() {
     }
   }
 
-  // Step 3: Final submit — only called when user clicks "Submit Request"
+  // Step 3: Final submit
   async function onSubmit(values: FormValues) {
     if (values.userPhone && values.userPhone.length >= 10 && !phoneVerified) {
       setServerError("Please verify your phone number before submitting.");
@@ -123,13 +122,26 @@ export default function SubmitPage() {
     setServerError("");
 
     try {
-      // Phone was verified — record already exists in DB, token already saved in state
+      // Phone was verified — record already exists, PATCH it with the currently selected requestType
       if (tempRequestId && phoneVerified && tempToken) {
+        const patchRes = await fetch("/api/dsar", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: tempRequestId,
+            requestType: values.requestType,
+            requestDetails: values.requestDetails,
+          }),
+        });
+        if (!patchRes.ok) {
+          const d = await patchRes.json();
+          throw new Error(d.message || "Failed to update request");
+        }
         setSuccessData({ token: tempToken, deadline: tempDeadline, email: values.userEmail });
         return;
       }
 
-      // No phone — create fresh record now on submit click
+      // No phone — create fresh record now
       const res = await fetch("/api/dsar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
