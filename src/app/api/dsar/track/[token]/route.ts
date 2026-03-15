@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
 import { getDaysRemaining } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
   try {
     const { token } = await params;
@@ -30,6 +32,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ tok
       certId: data.cert_id ?? null,
       aiSummaryEn: data.ai_summary_en ?? null,
       aiSummaryHi: data.ai_summary_hi ?? null,
+      emailVerified: data.email_verified ?? false,
+      phoneVerified: data.phone_verified ?? false,
+      userPhone: data.user_phone ?? null,
+      adminNote: data.admin_note ?? null,
     });
 
   } catch (err) {

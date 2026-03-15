@@ -14,12 +14,12 @@ export async function GET(req: NextRequest) {
     const status = req.nextUrl.searchParams.get("status");
     const validStatuses = ["submitted", "under_review", "processing", "completed", "rejected"];
 
-    let query = supabase.from("dsar_requests").select("*").order("created_at", { ascending: false });
+    let query = supabase.from("dsar_requests").select("*").neq("status", "pending").order("created_at", { ascending: false });
     if (status && validStatuses.includes(status)) query = query.eq("status", status);
 
     const [{ data: requests }, { data: all }] = await Promise.all([
       query,
-      supabase.from("dsar_requests").select("status, deadline"),
+      supabase.from("dsar_requests").select("status, deadline").neq("status", "pending"),
     ]);
 
     const allRows = all ?? [];

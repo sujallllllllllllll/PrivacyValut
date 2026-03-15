@@ -5,6 +5,7 @@ node_modules/
 
 # Agent / AI tooling — never commit
 .agent/
+.agent
 
 # Scratch / brainstorm files
 ideas.md

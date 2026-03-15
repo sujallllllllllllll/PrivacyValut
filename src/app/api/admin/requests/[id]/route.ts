@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
 import { getDaysRemaining } from "@/lib/utils";
 import { z } from "zod";
+import { generateAndSaveStatusNote } from "@/lib/status-note";
 
 const updateSchema = z.object({
   status: z.enum(["submitted", "under_review", "processing", "completed", "rejected"]),
@@ -16,6 +17,13 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     const { id } = await params;
     const { data, error } = await supabase.from("dsar_requests").select("*").eq("id", id).single();
     if (error || !data) return NextResponse.json({ message: "Not found" }, { status: 404 });
+
+    // Auto-advance to under_review when admin opens the ticket
+    if (data.status === "submitted") {
+      await supabase.from("dsar_requests").update({ status: "under_review", updated_at: new Date().toISOString() }).eq("id", id);
+      generateAndSaveStatusNote(supabase, id, data.user_name, data.request_type, "submitted", "under_review").catch(() => {});
+      data.status = "under_review";
+    }
 
     const daysRemaining = getDaysRemaining(data.deadline);
     return NextResponse.json({ ...data, daysRemaining, isUrgent: data.status !== "completed" && data.status !== "rejected" && daysRemaining !== null && daysRemaining < 7 });
